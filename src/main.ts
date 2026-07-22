@@ -1,6 +1,5 @@
 import { Character, EquipmentSlot, EquipableItem, StatType, Enemy, CompanionNPC, Stats, CharacterClassType, BuffType } from './types/game';
 import { createCharacter, calculateEffectiveStats, getBaseStatsAtLevel, equipItem, unequipItem, gainExp, CLASS_DEFINITIONS, rollDiceStats } from './engine/character';
-import { ITEM_DATABASE } from './engine/items';
 import { pullGacha } from './engine/gacha';
 
 // App state
@@ -514,32 +513,22 @@ function buildInventoryCard(item: EquipableItem): HTMLElement {
 }
 
 /**
- * Render complete inventory lists (base items + gacha-obtained items)
+ * Render inventory list containing only player's owned items
  */
 function renderInventory(): void {
   if (!activeCharacter) return;
 
   inventoryContainer.innerHTML = '';
 
-  // --- Section header for gacha items ---
-  if (playerInventory.length > 0) {
-    const gachaHeader = document.createElement('div');
-    gachaHeader.className = 'inv-section-header';
-    gachaHeader.textContent = '✨ 召喚済み武器';
-    inventoryContainer.appendChild(gachaHeader);
-
-    playerInventory.forEach(item => {
-      inventoryContainer.appendChild(buildInventoryCard(item));
-    });
-
-    const baseHeader = document.createElement('div');
-    baseHeader.className = 'inv-section-header';
-    baseHeader.textContent = '🗂️ 標準装備リスト';
-    inventoryContainer.appendChild(baseHeader);
+  if (playerInventory.length === 0) {
+    const emptyNotice = document.createElement('div');
+    emptyNotice.className = 'empty-inventory-notice';
+    emptyNotice.innerHTML = '📦 <strong>インベントリは空です</strong><br><span style="font-size:0.85rem; opacity:0.8; margin-top:0.4rem; display:inline-block;">ガチャ（装備召喚）で強力な武器・防具・装飾品を獲得しましょう！</span>';
+    inventoryContainer.appendChild(emptyNotice);
+    return;
   }
 
-  // --- Base item database ---
-  ITEM_DATABASE.forEach(item => {
+  playerInventory.forEach(item => {
     inventoryContainer.appendChild(buildInventoryCard(item));
   });
 }
@@ -1297,8 +1286,8 @@ btnDrawGacha.addEventListener('click', () => {
   // Add to player's personal gacha inventory
   playerInventory.push(drawnWeapon);
 
-  addLog(`🎲 [武器召喚] 50G を消費して召喚を実行しました！`, 'system');
-  addLog(`✨ 神器出現: **${drawnWeapon.name}** [レア度:${drawnWeapon.rarity.toUpperCase()}] を手に入れました！ インベントリに追加されました。`, 'levelup');
+  addLog(`🎲 [装備召喚] 50G を消費して召喚を実行しました！`, 'system');
+  addLog(`✨ 装備獲得: **${drawnWeapon.name}** [レア度:${drawnWeapon.rarity.toUpperCase()}] を手に入れました！ インベントリに追加されました。`, 'levelup');
 
   gachaResultBox.classList.remove('hidden');
   gachaResultCard.innerHTML = '';
