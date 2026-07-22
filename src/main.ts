@@ -87,10 +87,37 @@ const STORY_EVENTS: Record<1 | 2 | 3 | 4 | 5 | 6, StoryStageEvent> = {
   }
 };
 
+function getStoryEventNarration(stage: 1 | 2 | 3 | 4 | 5 | 6, gender: 'female' | 'male'): string {
+  switch (stage) {
+    case 1:
+      return gender === 'male'
+        ? "スライムを打ち破り、森の入り口へと差し掛かった。仲間が話しかけてくる。\n\n「無事で良かったぜ！この先の薄暗い森には、より狡猾な『ゴブリン』の群れが潜んでいるらしい。どう進む？」"
+        : "スライムを打ち破り、森の入り口へと差し掛かった。仲間が話しかけてくる。\n\n「無事で良かったです！この先の薄暗い森には、より狡猾な『ゴブリン』の群れが潜んでいるようです。どう進みましょう？」";
+    case 2:
+      return gender === 'male'
+        ? "ゴブリンのねぐらを制圧した。仲間はうつむきながら倒れた魔物を見つめている。\n\n「少し…やりすぎじゃないか？生き延びるためとはいえ、ここまで無残に殲滅しなくても…」"
+        : "ゴブリンのねぐらを制圧した。仲間はうつむきながら倒れた魔物を見つめている。\n\n「少し…やりすぎてはいませんか？生き延びるためとはいえ、ここまで無残に殲滅しなくても…」";
+    case 3:
+      return gender === 'male'
+        ? "洞窟の奥で大クモを撃破した。巣の残骸から、妖しく輝く『混沌の魔結晶』を発見した。\n\n「その結晶…とても禍々しい魔力を感じるぞ。絶対に触らず、聖堂に持ち帰って封印しようぜ！」"
+        : "洞窟の奥で大クモを撃破した。巣の残骸から、妖しく輝く『混沌の魔結晶』を発見した。\n\n「その結晶…とても禍々しい魔力を感じます。絶対に触れず、聖堂に持ち帰って封印しましょう！」";
+    case 4:
+      return "行く手を阻んだ盗賊団の首領を降伏させた。首領は頭を地面に擦り付けて懇願している。\n\n「命だけは助けてくれ！奪った宝はすべて差し上げる！だから見逃してくれ…！」";
+    case 5:
+      return gender === 'male'
+        ? "オーガの巨体を切り伏せた。戦いの跡で、仲間があなたの顔を不安そうに見つめる。\n\n「あんたの瞳の奥…冷酷な影が見える気がするんだ。まるで魔王の力と共鳴してるような…本当に大丈夫か？」"
+        : "オーガの巨体を切り伏せた。戦いの跡で、仲間があなたの顔を不安そうに見つめる。\n\n「あなたの瞳の奥…冷酷な影が見えるような気がします。まるで魔王の力と共鳴しているかのような…本当に大丈夫ですか？」";
+    case 6:
+      return "滅びの竜が倒れたその時、背後から冷徹な殺気が突き刺さる。\n\n振り返ると、仲間が武器を構えて涙を浮かべていた。\n\n(アライメント判定分岐...)";
+  }
+}
+
 // Endings Text templates
 const NARRATIVE_HERO_ENDING = `...そして、激闘の末に魔王は塵となってアストラルアリーナの深淵へと消え去った。\n\n[Name]と仲間の[CompName]は、ボロボロになりながらも手を取り合い、青空の下へ帰還した。\n\n人々は二人の偉業を称え、歴史の碑石に「世界を救いし二人の聖勇者」としてその名を永遠に刻んだ。\n\n――ここに、[Name]と[CompName]の旅は美しき大団円を迎えた。世界に再び平和の光が満ち溢れたのだ。`;
 
-const NARRATIVE_DEMON_ENDING = `...激闘の末、光の化身となった[CompName]の心臓を、[Name]の闇の刃が貫いた。\n\n「どうして…こうなってしまったの…」そう言い残し、[CompName]は光 of 粒子となって消滅した。\n\n魔王の王座に腰掛けた[Name]の体に、完全なる闇の魔力が宿る。もはやかつての勇者の面影はなく、新たな魔王「ラスボス」が誕生したのだ。\n\n世界は救われなかった。ただ、より深い漆黒の絶望に支配されただけだった。`;
+const NARRATIVE_DEMON_ENDING_FEMALE = `...激闘の末、光の化身となった[CompName]の心臓を、[Name]の闇の刃が貫いた。\n\n「どうして…こうなってしまったの…」そう言い残し、[CompName]は光の粒子となって消滅した。\n\n魔王の王座に腰掛けた[Name]の体に、完全なる闇の魔力が宿る。もはやかつての勇者の面影はなく、新たな魔王「ラスボス」が誕生したのだ。\n\n世界は救われなかった。ただ、より深い漆黒の絶望に支配されただけだった。`;
+
+const NARRATIVE_DEMON_ENDING_MALE = `...激闘の末、光の化身となった[CompName]の心臓を、[Name]の闇の刃が貫いた。\n\n「どうして…こうなっちまったんだ…」そう言い残し、[CompName]は光の粒子となって消滅した。\n\n魔王の王座に腰掛けた[Name]の体に、完全なる闇の魔力が宿る。もはやかつての勇者の面影はなく、新たな魔王「ラスボス」が誕生したのだ。\n\n世界は救われなかった。ただ、より深い漆黒の絶望に支配されただけだった。`;
 
 // DOM Elements
 const appHeader = document.getElementById('simulation-panel') ? document.querySelector('.app-header')! : document.createElement('header');
@@ -949,7 +976,8 @@ function triggerStageChoiceScreen(stageCompleted: 1 | 2 | 3 | 4 | 5 | 6): void {
   storyChoicesList.innerHTML = '';
 
   const eventDetails = STORY_EVENTS[stageCompleted]!;
-  const parsedNarration = eventDetails.narration
+  const rawNarration = getStoryEventNarration(stageCompleted, activeCharacter.companion.gender);
+  const parsedNarration = rawNarration
     .replace(/\[Name\]/g, activeCharacter.name)
     .replace(/\[CompName\]/g, activeCharacter.companion.name);
 
@@ -1016,22 +1044,26 @@ function createAlignmentBranchChoices(): void {
   const compName = activeCharacter.companion.name;
   
   if (activeCharacter.alignment >= 0) {
-    const descText = `「[Name]、魔王の波動が高まっています…！」\n\n仲間の[CompName]が声を震わせる。魔王の影が呪いとなり、彼女の体を侵食し始めている。\n\n魔王ディアボロスが囁く。「その娘を討つか、我が覇道に下るか選択せよ」`;
+    const isMale = activeCharacter.companion.gender === 'male';
+    const descText = isMale
+      ? `「[Name]、魔王の波動が高まってやがる…！」\n\n仲間の[CompName]が声を震わせる。魔王の影が呪いとなり、彼の体を侵食し始めている。\n\n魔王ディアボロスが囁く。「その男を討つか、我が覇道に下るか選択せよ」`
+      : `「[Name]、魔王の波動が高まっています…！」\n\n仲間の[CompName]が声を震わせる。魔王の影が呪いとなり、彼女の体を侵食し始めている。\n\n魔王ディアボロスが囁く。「その娘を討つか、我が覇道に下るか選択せよ」`;
+
     storyText.textContent = descText
       .replace(/\[Name\]/g, activeCharacter.name)
       .replace(/\[CompName\]/g, compName);
 
     const choiceA: StoryChoice = {
-      text: `☀️「セリアを絶対に救い出す！魔王、その汚い手を引っ込めろ！」`,
+      text: `☀️「${compName}を絶対に救い出す！魔王、その汚い手を引っ込めろ！」`,
       alignEffect: 2,
-      logMessage: 'セリアを救うため、正義の勇者としての闘志を燃やした！',
+      logMessage: `${compName}を救うため、正義の勇者としての闘志を燃やした！`,
       choiceClass: 'light'
     };
     
     const choiceB: StoryChoice = {
-      text: `🌙「呪われた者は救えない。世界を救うために彼女ごと魔王を叩き斬る」`,
+      text: `🌙「呪われた者は救えない。世界を救うために${compName}ごと魔王を叩き斬る」`,
       alignEffect: -2,
-      logMessage: '冷酷な決意。魔王とセリア両方を討つことを選んだ。',
+      logMessage: `冷酷な決意。魔王と${compName}両方を討つことを選んだ。`,
       choiceClass: 'dark'
     };
 
@@ -1043,19 +1075,26 @@ function createAlignmentBranchChoices(): void {
       list.appendChild(btn);
     });
   } else {
-    const descText = `「ごめんなさい、[Name]…これ以上、あなたを野放しにはできない。あなたの力は魔王と同等、いや、それ以上に世界を滅ぼす闇の権化となってしまった…！」\n\n悲痛な瞳で[CompName]が武器を構える。彼女の後ろには光の加護が集約されている。`;
+    const isMale = activeCharacter.companion.gender === 'male';
+    const descText = isMale
+      ? `「すまない、[Name]…これ以上、お前を野放しにはできない。お前の力は魔王と同等、いや、それ以上に世界を滅ぼす闇の権化となっちまった…！」\n\n悲痛な瞳で[CompName]が武器を構える。彼の後ろには光の加護が集約されている。`
+      : `「ごめんなさい、[Name]…これ以上、あなたを野放しにはできない。あなたの力は魔王と同等、いや、それ以上に世界を滅ぼす闇の権化となってしまった…！」\n\n悲痛な瞳で[CompName]が武器を構える。彼女の後ろには光の加護が集約されている。`;
+
     storyText.textContent = descText
+      .replace(/\[Name\]/g, activeCharacter.name)
       .replace(/\[CompName\]/g, compName);
 
     const choiceA: StoryChoice = {
-      text: `☀️「すまない…俺は道を踏み外していた。セリア、君の剣で目を覚まさせてくれ」`,
+      text: `☀️「すまない…俺は道を踏み外していた。${compName}、君の剣で目を覚まさせてくれ」`,
       alignEffect: 5,
       logMessage: '仲間の涙に心を打たれ、正気を取り戻して光の剣を構え直した。',
       choiceClass: 'light'
     };
 
     const choiceB: StoryChoice = {
-      text: `🌙「やはり裏切ったか…いいだろう、光の小娘。お前を屠り、俺が新たなる闇の王となる！」`,
+      text: isMale
+        ? `🌙「やはり裏切ったか…いいだろう。お前を屠り、俺が新たなる闇の王となる！」`
+        : `🌙「やはり裏切ったか…いいだろう、光の小娘。お前を屠り、俺が新たなる闇の王となる！」`,
       alignEffect: -5,
       logMessage: '闇の契約を完全に結んだ。かつての仲間を宿敵として見定めた。',
       choiceClass: 'dark'
@@ -1188,15 +1227,16 @@ createForm.addEventListener('submit', (e) => {
   storyChoicesBox.classList.add('hidden');
   btnStartQuest.classList.add('hidden');
 
-  const prologueNarrative = `突如として光に包まれ、見知らぬ地に降り立った[Name]。\n\nそこは、邪悪なる魔王の軍勢によって脅かされし異世界「アエテリア」であった。\n\n「異世界転生…本当にそんなことがあるなんて」\n\n呟く[Name]に駆け寄る少女がいた。その名は[CompName]。\n\n「召喚の儀式は成功したのですね！私は[CompClass]の[CompName]。どうか、この世界を支配せんとする魔王を討伐するため、力を貸してください！」\n\n[Name]は、己の運命を選択する第一歩を踏み出す――。`;
+  const isMaleComp = compGenderVal === 'male';
+  const companionNoun = isMaleComp ? '青年' : '少女';
   const classJp = CLASS_DEFINITIONS[compClassVal]!.name;
+  const companionSpeech = isMaleComp
+    ? `「召喚の儀式は成功したみたいだな！俺は${classJp}の${compName}。頼む、この世界を支配せんとする魔王を討伐するため、力を貸してくれ！」`
+    : `「召喚の儀式は成功したのですね！私は${classJp}の${compName}。どうか、この世界を支配せんとする魔王を討伐するため、力を貸してください！」`;
+
+  const prologueNarrative = `突如として光に包まれ、見知らぬ地に降り立った${name}。\n\nそこは、邪悪なる魔王の軍勢によって脅かされし異世界「アエテリア」であった。\n\n「異世界転生…本当にそんなことがあるなんて」\n\n呟く${name}に駆け寄る${companionNoun}がいた。その名は${compName}。\n\n${companionSpeech}\n\n${name}は、己の運命を選択する第一歩を踏み出す――。`;
   
-  const parsedIntro = prologueNarrative
-    .replace(/\[Name\]/g, name)
-    .replace(/\[CompName\]/g, compName)
-    .replace(/\[CompClass\]/g, classJp);
-    
-  runTypewriter(storyText, parsedIntro, () => {
+  runTypewriter(storyText, prologueNarrative, () => {
     btnStartQuest.classList.remove('hidden');
     btnStartQuest.disabled = false;
   });
@@ -1654,7 +1694,7 @@ function triggerEndingScreen(): void {
   } else {
     endingBadge.textContent = '💀 DEMON LORD ENDING (世界崩壊) 💀';
     endingBadge.style.textShadow = '0 0 20px rgba(255, 82, 82, 0.6)';
-    endingDesc = NARRATIVE_DEMON_ENDING;
+    endingDesc = activeCharacter.companion.gender === 'male' ? NARRATIVE_DEMON_ENDING_MALE : NARRATIVE_DEMON_ENDING_FEMALE;
   }
 
   const parsedEnding = endingDesc
