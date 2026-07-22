@@ -1,0 +1,699 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Aetheria - RPG Text Choice & Gacha Manager</title>
+  <!-- Google Fonts for premium RPG typography -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@600;800&family=Outfit:wght@300;400;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/src/style.css">
+</head>
+<body>
+  <div class="app-container">
+    <!-- Header -->
+    <header class="app-header">
+      <div class="header-logo">
+        <h1 class="game-title">AETHERIA</h1>
+        <span class="game-subtitle">TypeScript Narrative choice RPG Engine</span>
+      </div>
+      <div class="header-status">
+        <span class="indicator active">● Engine Ready</span>
+      </div>
+    </header>
+
+    <!-- Story Prologue Card -->
+    <div id="story-card" class="card glass story-screen hidden">
+      <div class="card-header story-header">
+        <h2>📜 旅立ちの序曲 (プロローグ)</h2>
+        <p>あなたの宿命が今、ここから始まります。</p>
+      </div>
+      <div class="card-body story-body">
+        <div class="story-content-box">
+          <p id="story-text" class="story-narrative"></p>
+        </div>
+        
+        <!-- Story Decisions -->
+        <div class="story-choices-container hidden" id="story-choices-box">
+          <span class="choice-title">行動を選択してください:</span>
+          <div class="story-choices-list" id="story-choices-list">
+            <!-- Dynamic choice buttons go here -->
+          </div>
+        </div>
+
+        <div class="story-actions">
+          <button id="btn-start-quest" class="btn btn-primary" disabled>⚔️ 宿命を受け入れ、旅立つ</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Story Epilogue Card -->
+    <div id="ending-card" class="card glass story-screen hidden">
+      <div class="card-header story-header ending-header">
+        <h2>🏆 伝説の帰還 (エンディング)</h2>
+        <p>旅路の果て、刻まれた結末の碑。</p>
+      </div>
+      <div class="card-body story-body">
+        <div class="ending-badge" id="ending-badge">🎉 GAME CLEAR 🎉</div>
+        <div class="story-content-box">
+          <p id="ending-text" class="story-narrative"></p>
+        </div>
+        <div class="story-actions">
+          <button id="btn-restart-game" class="btn btn-accent">🔄 新たなる旅へ (New Game+)</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Main Layout Grid -->
+    <main class="dashboard-grid" id="main-dashboard-grid">
+      
+      <!-- Left Panel: Creator & Character Card -->
+      <section class="left-panel">
+        
+        <!-- Character Creator Card -->
+        <div id="creator-card" class="card glass">
+          <div class="card-header">
+            <h2>異世界召喚の儀式</h2>
+            <p>転生する主人公と、旅を共にする仲間の設定を行いましょう。</p>
+          </div>
+          <div class="card-body">
+            <form id="create-character-form" onsubmit="event.preventDefault();">
+              
+              <!-- Protagonist Setup -->
+              <div class="creator-section">
+                <h3>👤 転生主人公の設定</h3>
+                <div class="form-group">
+                  <label for="char-name">主人公の名前</label>
+                  <input type="text" id="char-name" placeholder="例: アルス" required value="アルス">
+                </div>
+                
+                <div class="form-group">
+                  <label for="char-avatar-input">主人公の立ち絵・画像 (任意)</label>
+                  <div class="avatar-upload-area">
+                    <input type="file" id="char-avatar-input" accept="image/*" class="file-input-hidden">
+                    <label for="char-avatar-input" class="file-input-label">
+                      <span>📷 画像をアップロード</span>
+                    </label>
+                    <div class="avatar-upload-preview hidden" id="avatar-upload-preview">
+                      <img src="" alt="Avatar preview" id="avatar-preview-img">
+                      <button type="button" id="btn-remove-avatar" class="btn-remove-img">✕</button>
+                    </div>
+                  </div>
+                </div>
+
+                <div class="form-group">
+                  <label>主人公の職業</label>
+                  <div class="class-selector">
+                    <label class="class-option-card">
+                      <input type="radio" name="char-class" value="warrior" checked>
+                      <div class="class-option-content">
+                        <span class="class-icon">⚔️</span>
+                        <span class="class-name">戦士</span>
+                        <span class="class-desc">高HPと物理攻撃</span>
+                      </div>
+                    </label>
+                    <label class="class-option-card">
+                      <input type="radio" name="char-class" value="mage">
+                      <div class="class-option-content">
+                        <span class="class-icon">🔮</span>
+                        <span class="class-name">魔法使い</span>
+                        <span class="class-desc">高MPと魔法攻撃</span>
+                      </div>
+                    </label>
+                    <label class="class-option-card">
+                      <input type="radio" name="char-class" value="rogue">
+                      <div class="class-option-content">
+                        <span class="class-icon">🗡️</span>
+                        <span class="class-name">盗賊</span>
+                        <span class="class-desc">高速とクリティカル</span>
+                      </div>
+                    </label>
+                    <label class="class-option-card">
+                      <input type="radio" name="char-class" value="cleric">
+                      <div class="class-option-content">
+                        <span class="class-icon">🛡️</span>
+                        <span class="class-name">僧侶</span>
+                        <span class="class-desc">治癒力と高い魔防</span>
+                      </div>
+                    </label>
+                  </div>
+                </div>
+
+                <div class="form-group">
+                  <button type="button" id="btn-roll-player-stats" class="btn btn-secondary">🎲 主人公の能力値をダイスで決める</button>
+                  <div class="rolled-stats-preview hidden" id="player-stats-preview">
+                    <!-- Dynamic stats roll numbers -->
+                  </div>
+                </div>
+              </div>
+
+              <hr class="story-divider">
+
+              <!-- Companion Setup -->
+              <div class="creator-section">
+                <h3>👥 仲間NPCの設定</h3>
+                <div class="form-group">
+                  <label for="comp-name">仲間の名前</label>
+                  <input type="text" id="comp-name" placeholder="例: セリア" value="セリア">
+                </div>
+                
+                <div class="form-group">
+                  <label for="comp-avatar-input">仲間の立ち絵・画像 (任意)</label>
+                  <div class="avatar-upload-area">
+                    <input type="file" id="comp-avatar-input" accept="image/*" class="file-input-hidden">
+                    <label for="comp-avatar-input" class="file-input-label">
+                      <span>📷 画像をアップロード</span>
+                    </label>
+                    <div class="avatar-upload-preview hidden" id="comp-avatar-upload-preview">
+                      <img src="" alt="Companion preview" id="comp-avatar-preview-img">
+                      <button type="button" id="btn-remove-comp-avatar" class="btn-remove-img">✕</button>
+                    </div>
+                  </div>
+                </div>
+
+                <div class="form-group">
+                  <label>仲間の職業</label>
+                  <div class="class-selector">
+                    <label class="class-option-card">
+                      <input type="radio" name="comp-class" value="warrior">
+                      <div class="class-option-content">
+                        <span class="class-icon">⚔️</span>
+                        <span class="class-name">戦士</span>
+                      </div>
+                    </label>
+                    <label class="class-option-card">
+                      <input type="radio" name="comp-class" value="mage">
+                      <div class="class-option-content">
+                        <span class="class-icon">🔮</span>
+                        <span class="class-name">魔法使い</span>
+                      </div>
+                    </label>
+                    <label class="class-option-card">
+                      <input type="radio" name="comp-class" value="rogue">
+                      <div class="class-option-content">
+                        <span class="class-icon">🗡️</span>
+                        <span class="class-name">盗賊</span>
+                      </div>
+                    </label>
+                    <label class="class-option-card">
+                      <input type="radio" name="comp-class" value="cleric" checked>
+                      <div class="class-option-content">
+                        <span class="class-icon">🛡️</span>
+                        <span class="class-name">僧侶</span>
+                      </div>
+                    </label>
+                  </div>
+                </div>
+
+                <div class="form-group">
+                  <button type="button" id="btn-roll-comp-stats" class="btn btn-secondary">🎲 仲間の能力値をダイスで決める</button>
+                  <div class="rolled-stats-preview hidden" id="comp-stats-preview">
+                    <!-- Dynamic stats roll numbers -->
+                  </div>
+                </div>
+              </div>
+
+              <button type="submit" id="btn-create" class="btn btn-primary btn-launch-game">異世界へ召喚する</button>
+            </form>
+          </div>
+        </div>
+
+        <!-- Character Details Card -->
+        <div id="character-card" class="card glass hidden">
+          <div class="character-card-header">
+            <div class="char-avatar-container" id="char-avatar-wrapper">
+              <span id="char-avatar" class="char-avatar">⚔️</span>
+            </div>
+            <div class="char-title-info">
+              <h2 id="display-name" class="char-name">アルス</h2>
+              <div class="char-class-badge" id="display-class">戦士</div>
+            </div>
+            <div class="level-indicator">
+              <span class="lvl-label">LV</span>
+              <span id="display-level" class="lvl-val">1</span>
+            </div>
+          </div>
+          
+          <div class="card-body">
+            <!-- EXP Bar -->
+            <div class="exp-container">
+              <div class="exp-text">
+                <span>経験値 (EXP)</span>
+                <span id="display-exp-text">0 / 100</span>
+              </div>
+              <div class="progress-bar-bg">
+                <div id="display-exp-fill" class="progress-bar-fill" style="width: 0%;"></div>
+              </div>
+            </div>
+
+            <!-- Stats Sheet -->
+            <div class="stats-sheet">
+              <h3>ステータス</h3>
+              <div class="stats-grid">
+                <div class="stat-row">
+                  <span class="stat-label">❤️ 最大HP (HP)</span>
+                  <div class="stat-values">
+                    <span id="stat-base-hp" class="base-val">100</span>
+                    <span id="stat-calc-hp" class="calc-val">100</span>
+                  </div>
+                </div>
+                <div class="stat-row">
+                  <span class="stat-label">💧 最大MP (MP)</span>
+                  <div class="stat-values">
+                    <span id="stat-base-mp" class="base-val">20</span>
+                    <span id="stat-calc-mp" class="calc-val">20</span>
+                  </div>
+                </div>
+                <div class="stat-row">
+                  <span class="stat-label">⚔️ 物理攻撃 (ATK)</span>
+                  <div class="stat-values">
+                    <span id="stat-base-atk" class="base-val">15</span>
+                    <span id="stat-calc-atk" class="calc-val">15</span>
+                  </div>
+                </div>
+                <div class="stat-row">
+                  <span class="stat-label">🛡️ 物理防御 (DEF)</span>
+                  <div class="stat-values">
+                    <span id="stat-base-def" class="base-val">10</span>
+                    <span id="stat-calc-def" class="calc-val">10</span>
+                  </div>
+                </div>
+                <div class="stat-row">
+                  <span class="stat-label">⚡ 素早さ (SPD)</span>
+                  <div class="stat-values">
+                    <span id="stat-base-spd" class="base-val">8</span>
+                    <span id="stat-calc-spd" class="calc-val">8</span>
+                  </div>
+                </div>
+                <div class="stat-row">
+                  <span class="stat-label">✨ 魔法攻撃 (MATK)</span>
+                  <div class="stat-values">
+                    <span id="stat-base-matk" class="base-val">5</span>
+                    <span id="stat-calc-matk" class="calc-val">5</span>
+                  </div>
+                </div>
+                <div class="stat-row">
+                  <span class="stat-label">🌌 魔法防御 (MDEF)</span>
+                  <div class="stat-values">
+                    <span id="stat-base-mdef" class="base-val">6</span>
+                    <span id="stat-calc-mdef" class="calc-val">6</span>
+                  </div>
+                </div>
+              </div>
+              <p class="stat-legend">* 括弧内の数値は元のステータス、太字は装備とバフ適用後の実効ステータスです。</p>
+            </div>
+
+            <!-- Action Buttons -->
+            <div class="card-actions">
+              <button id="btn-gain-exp" class="btn btn-secondary">⚔️ 経験値 +35</button>
+              <button id="btn-levelup" class="btn btn-accent">🌟 レベルアップ</button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Companion NPC Card & Speech Bubble HUD -->
+        <div id="companion-card" class="card glass hidden">
+          <div class="character-card-header companion-card-header">
+            <div class="char-avatar-container companion-avatar-container" id="comp-avatar-wrapper">
+              <span id="comp-avatar" class="comp-avatar">🛡️</span>
+            </div>
+            <div class="char-title-info">
+              <h2 id="display-comp-name" class="char-name">セリア</h2>
+              <div class="char-class-badge" id="display-comp-class">僧侶</div>
+              <!-- Affection bar -->
+              <div class="affection-container">
+                <div class="affection-labels">
+                  <span>💕 好感度</span>
+                  <span id="comp-affection-text">80 / 100</span>
+                </div>
+                <div class="progress-bar-bg affection-bar-bg">
+                  <div id="comp-affection-fill" class="progress-bar-fill affection-fill" style="width: 80%;"></div>
+                </div>
+              </div>
+              <!-- Days since inn + betrayal warning -->
+              <div class="comp-status-badges">
+                <span id="days-since-inn-badge" class="comp-badge badge-inn">🛏️ 宿泊: 0日前</span>
+                <span id="betrayal-warning-badge" class="comp-badge badge-betrayal hidden">⚠️ 裏切りの危機！</span>
+              </div>
+            </div>
+            <button id="btn-talk-companion" class="btn btn-secondary btn-talk">💬 話しかける</button>
+          </div>
+          <div class="card-body">
+            <!-- Speech bubble box -->
+            <div class="speech-bubble-container hidden" id="speech-bubble-box">
+              <div class="speech-bubble">
+                <p id="comp-speech-text">「行こう、アルス。魔王を倒して世界に光を取り戻すんだ！」</p>
+              </div>
+            </div>
+
+            <!-- Companion Stats Sheet -->
+            <div class="stats-sheet compact-sheet">
+              <h3>同行者の能力値</h3>
+              <div class="stats-grid compact-grid">
+                <div class="stat-row">
+                  <span class="stat-label">❤️ HP:</span>
+                  <span id="comp-stat-hp" class="calc-val">80</span>
+                </div>
+                <div class="stat-row">
+                  <span class="stat-label">💧 MP:</span>
+                  <span id="comp-stat-mp" class="calc-val">40</span>
+                </div>
+                <div class="stat-row">
+                  <span class="stat-label">⚔️ ATK:</span>
+                  <span id="comp-stat-atk" class="calc-val">10</span>
+                </div>
+                <div class="stat-row">
+                  <span class="stat-label">🛡️ DEF:</span>
+                  <span id="comp-stat-def" class="calc-val">12</span>
+                </div>
+                <div class="stat-row">
+                  <span class="stat-label">⚡ SPD:</span>
+                  <span id="comp-stat-spd" class="calc-val">11</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+      </section>
+
+      <!-- Right Panel: Inventory, Equipment & Buffs -->
+      <section class="right-panel">
+        
+        <!-- Equipment Slots -->
+        <div id="equipment-card" class="card glass hidden">
+          <div class="card-header">
+            <h2>装備スロット</h2>
+            <p>装備中のアイテム。クリックすると装備解除します。</p>
+          </div>
+          <div class="card-body">
+            <div class="equipment-slots-grid">
+              
+              <div class="equip-slot-container" data-slot="weapon">
+                <span class="slot-label">武器 (Weapon)</span>
+                <div class="equip-slot empty" id="slot-weapon">
+                  <span class="slot-placeholder">⚔️ 空きスロット</span>
+                </div>
+              </div>
+              
+              <div class="equip-slot-container" data-slot="shield">
+                <span class="slot-label">盾 (Shield)</span>
+                <div class="equip-slot empty" id="slot-shield">
+                  <span class="slot-placeholder">🛡️ 空きスロット</span>
+                </div>
+              </div>
+              
+              <div class="equip-slot-container" data-slot="armor">
+                <span class="slot-label">鎧 (Armor)</span>
+                <div class="equip-slot empty" id="slot-armor">
+                  <span class="slot-placeholder">👕 空きスロット</span>
+                </div>
+              </div>
+              
+              <div class="equip-slot-container" data-slot="accessory">
+                <span class="slot-label">装飾品 (Accessory)</span>
+                <div class="equip-slot empty" id="slot-accessory">
+                  <span class="slot-placeholder">💍 空きスロット</span>
+                </div>
+              </div>
+
+            </div>
+          </div>
+        </div>
+
+        <!-- Gacha Summon Weapon Card -->
+        <div id="gacha-card" class="card glass hidden">
+          <div class="card-header">
+            <h2>神器召喚 (武器ガチャ)</h2>
+            <p>ゴールドを消費して、現在の職業に対応した武器をランダムに召喚します。</p>
+          </div>
+          <div class="card-body">
+            <div class="gacha-hud">
+              <div class="gold-display">
+                <span>所持ゴールド:</span>
+                <strong id="display-gold">100 G</strong>
+              </div>
+              <div class="gacha-cost">
+                <span>召喚費用:</span>
+                <strong>50 G / 回</strong>
+              </div>
+            </div>
+            
+            <div class="gacha-action-box">
+              <button id="btn-draw-gacha" class="btn btn-accent">✨ 武器召喚を実行する</button>
+            </div>
+            
+            <div class="gacha-result-box hidden" id="gacha-result-box">
+              <span class="gacha-result-label">召喚結果:</span>
+              <div class="gacha-result-card" id="gacha-result-card">
+                <!-- Summons details go here -->
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Inn Lodging Card -->
+        <div id="inn-card" class="card glass hidden">
+          <div class="card-header">
+            <h2>🏨 宿屋</h2>
+            <p>HP/MPを全回復し、宿泊日数をリセットします。3日以上泊まらないと仲間の好感度が低下します！</p>
+          </div>
+          <div class="card-body">
+            <div class="inn-info-grid">
+              <div class="inn-info-item">
+                <span class="inn-info-label">宿泊費用</span>
+                <strong class="inn-info-value">30 G</strong>
+              </div>
+              <div class="inn-info-item">
+                <span class="inn-info-label">最後の宿泊</span>
+                <strong class="inn-info-value" id="inn-days-display">0日前</strong>
+              </div>
+              <div class="inn-info-item">
+                <span class="inn-info-label">好感度状態</span>
+                <strong class="inn-info-value" id="inn-affection-status">😊 良好</strong>
+              </div>
+            </div>
+            <div id="inn-danger-warning" class="inn-danger-box hidden">
+              ⚠️ 宿泊3日を超過中！仲間の好感度が毎戦 -35% 低下しています。好感度30%以下で裏切りが発生します！
+            </div>
+            <div class="gacha-action-box">
+              <button id="btn-stay-inn" class="btn btn-secondary btn-inn">🛏️ 宿に泊まる (30G / HP&MP全回復)</button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Inventory Grid -->
+        <div id="inventory-card" class="card glass hidden">
+          <div class="card-header">
+            <h2>インベントリ</h2>
+            <p>アイテムを選択して装備します。職業制限にご注意ください。</p>
+          </div>
+          <div class="card-body">
+            <div class="inventory-grid" id="inventory-container">
+              <!-- Dynamically populated -->
+            </div>
+          </div>
+        </div>
+
+        <!-- Status Effects Panel -->
+        <div id="effects-card" class="card glass hidden">
+          <div class="card-header">
+            <h2>状態変化 / バフ</h2>
+            <p>計算上のバフ/デバフ効果をリアルタイムに反映します。</p>
+          </div>
+          <div class="card-body">
+            <div class="status-effects-toggles">
+              <label class="effect-toggle-btn">
+                <input type="checkbox" id="effect-might" value="might">
+                <div class="effect-btn-content">
+                  <span class="effect-icon">🔴</span>
+                  <div class="effect-info">
+                    <span class="effect-title">怪力 (Might)</span>
+                    <span class="effect-detail">物理攻撃 +30%</span>
+                  </div>
+                </div>
+              </label>
+
+              <label class="effect-toggle-btn">
+                <input type="checkbox" id="effect-haste" value="haste">
+                <div class="effect-btn-content">
+                  <span class="effect-icon">⚡</span>
+                  <div class="effect-info">
+                    <span class="effect-title">加速 (Haste)</span>
+                    <span class="effect-detail">素早さ +50%</span>
+                  </div>
+                </div>
+              </label>
+
+              <label class="effect-toggle-btn">
+                <input type="checkbox" id="effect-poison" value="poison">
+                <div class="effect-btn-content">
+                  <span class="effect-icon">🟢</span>
+                  <div class="effect-info">
+                    <span class="effect-title">毒 (Poison)</span>
+                    <span class="effect-detail">最大HP -10%, 防御 -20%</span>
+                  </div>
+                </div>
+              </label>
+
+              <label class="effect-toggle-btn">
+                <input type="checkbox" id="effect-shield" value="shield">
+                <div class="effect-btn-content">
+                  <span class="effect-icon">🛡️</span>
+                  <div class="effect-info">
+                    <span class="effect-title">防護壁 (Shield)</span>
+                    <span class="effect-detail">物理/魔法防御 +25%</span>
+                  </div>
+                </div>
+              </label>
+            </div>
+          </div>
+        </div>
+
+      </section>
+    </main>
+
+    <!-- Bottom Panel: Visual Battle Arena -->
+    <footer class="simulation-section glass hidden" id="simulation-panel">
+      <div class="sim-header">
+        <h2>アストラル・バトルアリーナ (戦闘画面)</h2>
+        <p>立ちはだかるクエストエネミーを討伐してください。勝利すると経験値とゴールドを獲得できます！</p>
+      </div>
+      
+      <div class="battle-arena">
+        
+        <!-- Player Unit Card -->
+        <div class="battle-unit player-side" id="battle-player-card">
+          <div class="unit-header-badge player-badge">PLAYER</div>
+          <div class="battle-avatar-container">
+            <div id="battle-player-avatar" class="battle-avatar">⚔️</div>
+          </div>
+          <div class="battle-unit-details">
+            <h3 id="battle-player-name">アルス</h3>
+            <span class="battle-unit-class" id="battle-player-class">戦士</span>
+          </div>
+          
+          <div class="battle-unit-bars">
+            <div class="bar-group">
+              <div class="bar-labels">
+                <span>HP</span>
+                <span id="battle-player-hp-text">100 / 100</span>
+              </div>
+              <div class="bar-outer hp-bar">
+                <div id="battle-player-hp-fill" class="bar-inner hp-fill" style="width: 100%;"></div>
+              </div>
+            </div>
+            
+            <div class="bar-group">
+              <div class="bar-labels">
+                <span>MP</span>
+                <span id="battle-player-mp-text">20 / 20</span>
+              </div>
+              <div class="bar-outer mp-bar">
+                <div id="battle-player-mp-fill" class="bar-inner mp-fill" style="width: 100%;"></div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Battle Log & Control Console -->
+        <div class="battle-center">
+          
+          <!-- Quest progression nodes path -->
+          <div class="quest-progression-panel">
+            <span class="panel-label">進行クエスト:</span>
+            <div class="quest-stages">
+              <div class="quest-node active" id="stage-node-1"><span class="node-num">1</span><span class="node-name">スライム</span></div>
+              <div class="quest-connector" id="connector-1"></div>
+              <div class="quest-node" id="stage-node-2"><span class="node-num">2</span><span class="node-name">ゴブリン</span></div>
+              <div class="quest-connector" id="connector-2"></div>
+              <div class="quest-node" id="stage-node-3"><span class="node-num">3</span><span class="node-name">大クモ</span></div>
+              <div class="quest-connector" id="connector-3"></div>
+              <div class="quest-node" id="stage-node-4"><span class="node-num">4</span><span class="node-name">盗賊</span></div>
+              <div class="quest-connector" id="connector-4"></div>
+              <div class="quest-node" id="stage-node-5"><span class="node-num">5</span><span class="node-name">オーガ</span></div>
+              <div class="quest-connector" id="connector-5"></div>
+              <div class="quest-node" id="stage-node-6"><span class="node-num">6</span><span class="node-name">ドラゴン</span></div>
+              <div class="quest-connector" id="connector-6"></div>
+              <div class="quest-node" id="stage-node-7"><span class="node-num">7</span><span class="node-name" id="stage-node-7-name">魔王</span></div>
+            </div>
+          </div>
+
+          <!-- Fight Commands -->
+          <div class="battle-controls">
+            <button id="btn-sim-attack" class="btn btn-action btn-fight">⚔️ 通常攻撃 (物理)</button>
+            <button id="btn-sim-cast" class="btn btn-action btn-spell">🔮 ファイア (MP 10)</button>
+            <button id="btn-sim-heal" class="btn btn-action btn-heal">💚 ヒール (MP 6)</button>
+            <button id="btn-sim-defend" class="btn btn-action btn-defend">🛡️ 防御する (軽減)</button>
+          </div>
+
+          <div class="console-log-container">
+            <div class="console-header">
+              <span>戦闘ログ</span>
+              <button id="btn-clear-console" class="btn-clear">クリア</button>
+            </div>
+            <div class="console-body" id="console-logs">
+              <!-- Simulated logs print here -->
+            </div>
+          </div>
+        </div>
+
+        <!-- Enemy Unit Card -->
+        <div class="battle-unit enemy-side" id="battle-enemy-card">
+          <div class="unit-header-badge enemy-badge">ENEMY</div>
+          <div class="battle-avatar-container">
+            <div id="battle-enemy-avatar" class="battle-avatar enemy-art">🟢</div>
+          </div>
+          <div class="battle-unit-details">
+            <h3 id="battle-enemy-name">スライム</h3>
+            <span class="battle-unit-class text-accent">Lv.1 モンスター</span>
+          </div>
+          
+          <div class="battle-unit-bars">
+            <div class="bar-group">
+              <div class="bar-labels">
+                <span>HP</span>
+                <span id="battle-enemy-hp-text">40 / 40</span>
+              </div>
+              <div class="bar-outer hp-bar">
+                <div id="battle-enemy-hp-fill" class="bar-inner hp-fill-enemy" style="width: 100%;"></div>
+              </div>
+            </div>
+            
+            <div class="enemy-rewards">
+              <span>討伐報酬: <strong id="battle-enemy-reward" class="text-success">+30 EXP</strong></span>
+            </div>
+          </div>
+        </div>
+
+      </div>
+
+      <!-- Damage popup layer container -->
+      <div id="damage-text-layer" class="damage-text-layer"></div>
+
+      <div class="arena-footer">
+        <button id="btn-reset-character" class="btn btn-secondary btn-reset-small">🔄 キャラクター初期化</button>
+      </div>
+    </footer>
+  </div>
+
+  <div id="game-over-card" class="card glass story-screen hidden">
+    <div class="card-header story-header ending-header">
+      <h2>💀 GAME OVER</h2>
+      <p>戦いに敗れ、冒険の灯火は消えました。</p>
+    </div>
+    <div class="card-body story-body">
+      <div class="story-content-box">
+        <p id="game-over-text" class="story-narrative">敵の猛攻に敗れ、あなたはこの戦いを終えました。</p>
+      </div>
+      <div class="story-actions">
+        <button id="btn-restart-gameover" class="btn btn-accent">🔄 最初からやり直す</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Run code -->
+  <script type="module" src="/src/main.ts"></script>
+</body>
+</html>
