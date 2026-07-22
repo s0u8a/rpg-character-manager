@@ -21,14 +21,14 @@ let rolledCompanionStats: Stats | null = null;
 // Each entry gets a unique instanceId so duplicates stack properly
 let playerInventory: EquipableItem[] = [];
 
-// Enemy templates mapped to quest stages
+// Enemy templates mapped to quest stages (High level monsters)
 const ENEMY_TEMPLATES: Record<1 | 2 | 3 | 4 | 5 | 6, Omit<Enemy, 'hp'>> = {
-  1: { name: 'スライム (Stage 1)',           maxHp: 45,  atk: 8,  def: 3,  icon: '🟢', imageUrl: '/img/suraimu.png', rewardExp: 40 },
-  2: { name: 'ゴブリン (Stage 2)',           maxHp: 75,  atk: 12, def: 5,  icon: '😈', imageUrl: '/img/goburin.png', rewardExp: 60 },
-  3: { name: 'ジャイアントスパイダー (Stage 3)', maxHp: 110, atk: 18, def: 7,  icon: '🕷️', imageUrl: '/img/kumo.png',    rewardExp: 80 },
-  4: { name: 'ならず者の盗賊 (Stage 4)',     maxHp: 150, atk: 24, def: 9,  icon: '👤', imageUrl: '/img/touzoku.png', rewardExp: 110 },
-  5: { name: '狂暴なオーガ (Stage 5)',       maxHp: 210, atk: 30, def: 12, icon: '👹', imageUrl: '/img/o-ga.png',    rewardExp: 150 },
-  6: { name: '滅びのレッドドラゴン (Stage 6)', maxHp: 320, atk: 38, def: 18, icon: '🐉', imageUrl: '/img/doragon.png', rewardExp: 220 }
+  1: { name: 'スライム (Stage 1)',           level: 5,  maxHp: 90,  atk: 16, def: 5,  icon: '🟢', imageUrl: '/img/suraimu.png', rewardExp: 150 },
+  2: { name: 'ゴブリン (Stage 2)',           level: 12, maxHp: 170, atk: 28, def: 10, icon: '😈', imageUrl: '/img/goburin.png', rewardExp: 280 },
+  3: { name: 'ジャイアントスパイダー (Stage 3)', level: 20, maxHp: 280, atk: 42, def: 18, icon: '🕷️', imageUrl: '/img/kumo.png',    rewardExp: 420 },
+  4: { name: 'ならず者の盗賊 (Stage 4)',     level: 28, maxHp: 420, atk: 60, def: 26, icon: '👤', imageUrl: '/img/touzoku.png', rewardExp: 600 },
+  5: { name: '狂暴なオーガ (Stage 5)',       level: 36, maxHp: 620, atk: 80, def: 36, icon: '👹', imageUrl: '/img/o-ga.png',    rewardExp: 850 },
+  6: { name: '滅びのレッドドラゴン (Stage 6)', level: 48, maxHp: 950, atk: 105, def: 48, icon: '🐉', imageUrl: '/img/doragon.png', rewardExp: 1200 }
 };
 
 // Story Choice definitions
@@ -194,8 +194,6 @@ const slotAccessory = document.getElementById('slot-accessory')!;
 const inventoryContainer = document.getElementById('inventory-container')!;
 
 // Interaction buttons
-const btnGainExp = document.getElementById('btn-gain-exp')!;
-const btnLevelup = document.getElementById('btn-levelup')!;
 const btnResetChar = document.getElementById('btn-reset-character')!;
 
 // Avatar file upload elements
@@ -723,7 +721,7 @@ function updateUI(): void {
 
   // 5. Battle Screen Enemy Details
   if (activeEnemy) {
-    battleEnemyName.textContent = activeEnemy.name;
+    battleEnemyName.textContent = `${activeEnemy.name} (Lv.${activeEnemy.level})`;
     // Show monster sprite if available, else fall back to emoji icon
     if (activeEnemy.imageUrl) {
       battleEnemyAvatar.innerHTML = `<img src="${activeEnemy.imageUrl}" alt="${activeEnemy.name}" class="enemy-sprite">`;
@@ -811,28 +809,30 @@ function spawnStageEnemy(stage: 1 | 2 | 3 | 4 | 5 | 6 | 7): void {
       stageNode7Name.textContent = '魔王';
       activeEnemy = {
         name: '暗黒魔王 ディアボロス',
-        maxHp: 520,
-        hp: 520,
-        atk: 48,
-        def: 24,
+        level: 58,
+        maxHp: 1400,
+        hp: 1400,
+        atk: 135,
+        def: 65,
         icon: '👿',
         imageUrl: '/img/maou.png',
-        rewardExp: 500
+        rewardExp: 2000
       };
-      addLog(`最終試練：[${activeEnemy.name}] が王座より降臨しました！`, 'error');
+      addLog(`最終試練：[${activeEnemy.name} (Lv.58)] が王座より降臨しました！`, 'error');
     } else {
       stageNode7Name.textContent = '仲間';
       activeEnemy = {
         name: `${activeCharacter.companion.name} (光の勇者)`,
-        maxHp: 650,
-        hp: 650,
-        atk: 56,
-        def: 28,
+        level: 62,
+        maxHp: 1600,
+        hp: 1600,
+        atk: 145,
+        def: 72,
         icon: '👼',
         imageUrl: '/img/maou.png',
-        rewardExp: 600
+        rewardExp: 2500
       };
-      addLog(`宿命の戦い：かつての友、[${activeEnemy.name}] が光の聖剣を構えて立ち塞がります！`, 'error');
+      addLog(`宿命の戦い：かつての友、[${activeEnemy.name} (Lv.62)] が光の聖剣を構えて立ち塞がります！`, 'error');
     }
   } else {
     const template = ENEMY_TEMPLATES[stage as 1 | 2 | 3 | 4 | 5 | 6]!;
@@ -1538,9 +1538,10 @@ function handleEnemyDefeated(): void {
   const result = gainExp(activeCharacter, earnedExp);
   
   if (result.leveledUp) {
-    addLog(`🌟 経験値 ${earnedExp} を獲得！ ➡️ レベルアップしました！ LV ${oldLevel} ➡️ LV ${activeCharacter.level}！ HP/MP全回復！`, 'levelup');
+    const lvlText = result.levelsGained > 1 ? ` (+${result.levelsGained} LV)` : '';
+    addLog(`🌟 経験値 ${earnedExp} を獲得！ ➡️ レベルアップしました！ LV ${oldLevel} ➡️ LV ${activeCharacter.level}${lvlText}！ HP/MP全回復！`, 'levelup');
     triggerLevelUpAnimation();
-    spawnDamagePop(battlePlayerCard, 'LEVEL UP!', 'heal');
+    spawnDamagePop(battlePlayerCard, `LEVEL UP!${lvlText}`, 'heal');
   } else {
     addLog(`✨ 経験値 ${earnedExp} を獲得！ 次のレベルまであと: ${activeCharacter.level * 100 - result.newExp} EXP`, 'system');
   }
@@ -1751,40 +1752,4 @@ btnClearConsole.addEventListener('click', () => {
   addLog('戦闘ログをクリアしました。', 'system');
 });
 
-/**
- * Gain EXP Action
- */
-btnGainExp.addEventListener('click', () => {
-  if (!activeCharacter) return;
-  
-  const expAmount = 35;
-  const expNeeded = activeCharacter.level * 100;
-  const oldLevel = activeCharacter.level;
-  
-  const result = gainExp(activeCharacter, expAmount);
-  
-  if (result.leveledUp) {
-    addLog(`⚔️ 経験値 ${expAmount} を獲得！ ➡️ レベルアップしました！ LV ${oldLevel} ➡️ LV ${activeCharacter.level}！ HP/MP全回復！`, 'levelup');
-    triggerLevelUpAnimation();
-    spawnDamagePop(battlePlayerCard, 'LEVEL UP!', 'heal');
-  } else {
-    addLog(`⚔️ 経験値 ${expAmount} を獲得。次のレベルまで残り: ${expNeeded - result.newExp} EXP`, 'system');
-  }
-  
-  updateUI();
-});
 
-/**
- * Manual Level Up Action
- */
-btnLevelup.addEventListener('click', () => {
-  if (!activeCharacter) return;
-  
-  const oldLevel = activeCharacter.level;
-  gainExp(activeCharacter, activeCharacter.level * 100);
-  
-  addLog(`🌟 手動でレベルアップ！ LV ${oldLevel} ➡️ LV ${activeCharacter.level}！ HP/MPが全回復しました。`, 'levelup');
-  triggerLevelUpAnimation();
-  spawnDamagePop(battlePlayerCard, 'LEVEL UP!', 'heal');
-  updateUI();
-});

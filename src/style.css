@@ -1376,6 +1376,20 @@ body {
   100% { transform: scale(1); }
 }
 
+.auto-levelup-notice {
+  display: inline-block;
+  background: rgba(255, 215, 0, 0.1);
+  border: 1px dashed rgba(255, 215, 0, 0.4);
+  color: var(--accent-color, #ffd700);
+  font-size: 0.85rem;
+  font-weight: 500;
+  padding: 0.5rem 1rem;
+  border-radius: 20px;
+  text-align: center;
+  margin-top: 0.5rem;
+  width: 100%;
+}
+
 /* Story Screen Overlays Styling */
 .story-screen {
   max-width: 800px;

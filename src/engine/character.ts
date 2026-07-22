@@ -360,17 +360,27 @@ export function levelUp(char: Character): void {
 }
 
 /**
- * Gain EXP action. Returns true if leveled up.
+ * Gain EXP action. Supports multi-level up if large EXP amount gained.
  */
-export function gainExp(char: Character, amount: number): { leveledUp: boolean; newExp: number } {
-  const expNeeded = char.level * 100;
+export function gainExp(char: Character, amount: number): { leveledUp: boolean; levelsGained: number; newExp: number } {
   char.exp += amount;
+  let levelsGained = 0;
   
-  if (char.exp >= expNeeded) {
-    char.exp -= expNeeded;
-    levelUp(char);
-    return { leveledUp: true, newExp: char.exp };
+  while (true) {
+    const expNeeded = char.level * 100;
+    if (char.exp >= expNeeded) {
+      char.exp -= expNeeded;
+      char.level += 1;
+      levelsGained += 1;
+      
+      // Fully heal HP/MP on level up
+      const newMaxStats = calculateEffectiveStats(char);
+      char.currentHp = newMaxStats.hp;
+      char.currentMp = newMaxStats.mp;
+    } else {
+      break;
+    }
   }
   
-  return { leveledUp: false, newExp: char.exp };
+  return { leveledUp: levelsGained > 0, levelsGained, newExp: char.exp };
 }

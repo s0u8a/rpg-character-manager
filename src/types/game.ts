@@ -111,6 +111,7 @@ export interface Character {
 
 export interface Enemy {
   readonly name: string;
+  readonly level: number;
   readonly maxHp: number;
   hp: number;
   readonly atk: number;
