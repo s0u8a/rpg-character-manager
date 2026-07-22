@@ -82,6 +82,7 @@ export interface Buff {
 
 export interface CompanionNPC {
   readonly name: string;
+  readonly gender: 'female' | 'male';
   readonly classType: CharacterClassType;
   stats: Stats;
   avatarUrl?: string;

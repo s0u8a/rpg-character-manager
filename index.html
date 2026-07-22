@@ -173,6 +173,26 @@
                 </div>
 
                 <div class="form-group">
+                  <label>仲間の性別</label>
+                  <div class="gender-selector">
+                    <label class="gender-option-card">
+                      <input type="radio" name="comp-gender" value="female" checked>
+                      <div class="gender-option-content">
+                        <span class="gender-icon">♀</span>
+                        <span class="gender-name">女性</span>
+                      </div>
+                    </label>
+                    <label class="gender-option-card">
+                      <input type="radio" name="comp-gender" value="male">
+                      <div class="gender-option-content">
+                        <span class="gender-icon">♂</span>
+                        <span class="gender-name">男性</span>
+                      </div>
+                    </label>
+                  </div>
+                </div>
+
+                <div class="form-group">
                   <label>仲間の職業</label>
                   <div class="class-selector">
                     <label class="class-option-card">
@@ -319,7 +339,10 @@
             </div>
             <div class="char-title-info">
               <h2 id="display-comp-name" class="char-name">セリア</h2>
-              <div class="char-class-badge" id="display-comp-class">僧侶</div>
+              <div class="char-sub-info" style="display: flex; gap: 0.5rem; margin-top: 0.25rem;">
+                <span class="char-class-badge" id="display-comp-class">僧侶</span>
+                <span class="char-class-badge gender-badge" id="display-comp-gender">女性 ♀</span>
+              </div>
               <!-- Affection bar -->
               <div class="affection-container">
                 <div class="affection-labels">

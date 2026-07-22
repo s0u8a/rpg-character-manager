@@ -1402,6 +1402,47 @@ body {
   line-height: 1.6;
 }
 
+.gender-selector {
+  display: flex;
+  gap: 1rem;
+  margin-top: 0.3rem;
+}
+
+.gender-option-card {
+  flex: 1;
+  cursor: pointer;
+}
+
+.gender-option-card input[type="radio"] {
+  display: none;
+}
+
+.gender-option-content {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  padding: 0.6rem 1rem;
+  background: rgba(0, 0, 0, 0.25);
+  border: 1px solid var(--glass-border, rgba(255, 255, 255, 0.15));
+  border-radius: 8px;
+  font-weight: 600;
+  transition: all 0.2s ease;
+}
+
+.gender-option-card input[type="radio"]:checked + .gender-option-content {
+  background: rgba(0, 229, 255, 0.15);
+  border-color: var(--accent-color, #00e5ff);
+  color: #fff;
+  box-shadow: 0 0 12px rgba(0, 229, 255, 0.3);
+}
+
+.gender-badge {
+  background: rgba(255, 64, 129, 0.15);
+  border-color: rgba(255, 64, 129, 0.4);
+  color: #ff4081;
+}
+
 /* Story Screen Overlays Styling */
 .story-screen {
   max-width: 800px;

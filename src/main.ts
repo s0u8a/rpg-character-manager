@@ -146,6 +146,7 @@ const statMdefCalc = document.getElementById('stat-calc-mdef')!;
 const compAvatarWrapper = document.getElementById('comp-avatar-wrapper')!;
 const displayCompName = document.getElementById('display-comp-name')!;
 const displayCompClass = document.getElementById('display-comp-class')!;
+const displayCompGender = document.getElementById('display-comp-gender')!;
 const compAffectionText = document.getElementById('comp-affection-text')!;
 const btnTalkCompanion = document.getElementById('btn-talk-companion')!;
 const speechBubbleBox = document.getElementById('speech-bubble-box')!;
@@ -737,6 +738,10 @@ function updateUI(): void {
   compStatDef.textContent = comp.stats.def.toString();
   compStatSpd.textContent = comp.stats.spd.toString();
 
+  if (displayCompGender) {
+    displayCompGender.textContent = comp.gender === 'female' ? '女性 ♀' : '男性 ♂';
+  }
+
   // 7. Companion affection and inn status
   updateCompanionAffectionUI();
   updateInnStatusUI();
@@ -1154,7 +1159,9 @@ createForm.addEventListener('submit', (e) => {
   const classRadio = document.querySelector('input[name="char-class"]:checked') as HTMLInputElement;
   const classVal = classRadio.value as CharacterClassType;
 
-  const compName = compNameInput.value.trim() || 'セリア';
+  const compGenderRadio = document.querySelector('input[name="comp-gender"]:checked') as HTMLInputElement;
+  const compGenderVal = (compGenderRadio ? compGenderRadio.value : 'female') as 'female' | 'male';
+  const compName = compNameInput.value.trim() || (compGenderVal === 'male' ? 'ルーク' : 'セリア');
   const compClassRadio = document.querySelector('input[name="comp-class"]:checked') as HTMLInputElement;
   const compClassVal = compClassRadio.value as CharacterClassType;
 
@@ -1162,7 +1169,8 @@ createForm.addEventListener('submit', (e) => {
   if (!rolledCompanionStats) rolledCompanionStats = rollDiceStats(compClassVal);
 
   const companionNPC: CompanionNPC = {
-    name: compName,
+    name: compNameInput.value.trim() || (compGenderVal === 'male' ? 'ルーク' : 'セリア'),
+    gender: compGenderVal,
     classType: compClassVal,
     stats: rolledCompanionStats,
     avatarUrl: selectedCompanionAvatarUrl ?? undefined,
@@ -1232,31 +1240,91 @@ btnTalkCompanion.addEventListener('click', () => {
 
   speechBubbleBox.classList.remove('hidden');
   
+  const comp = activeCharacter.companion;
+  const isFemale = comp.gender === 'female';
   let quotes: string[] = [];
 
   if (activeCharacter.alignment >= 0) {
+    // Light / Hero alignment dialogues
     switch (currentStage) {
-      case 1: quotes = [`「一緒に魔王を倒しましょう、${activeCharacter.name}さん！まずはスライムを片付けちゃいましょう！」`, `「私の回復魔法でしっかりサポートしますね！」`]; break;
-      case 2: quotes = [`「ゴブリンたちは集団で襲ってきます。気をつけてください！」`, `「${activeCharacter.name}さんが戦ってくれるなら、私は心強いです！」`]; break;
-      case 3: quotes = [`「大クモの毒はとても厄介です。少しでも痺れたら言ってください！」`, `「洞窟は暗いですね…私の聖なる光で照らします」`]; break;
-      case 4: quotes = [`「盗賊たちに襲われましたね…でも、命を奪わずに衛兵に渡してくれて安心しました。」`, `「旅路にはいろんな人がいますね。油断しないようにしましょう」`]; break;
-      case 5: quotes = [`「オーガの怪力、凄まじい破壊力でした…！${activeCharacter.name}さん、怪我はありませんか？」`, `「天と地の神々に誓って、私は${activeCharacter.name}さんを信じています！」`]; break;
-      case 6: quotes = [`「ついに滅びの竜まで倒しましたね！世界が私たちの勝利を待ち望んでいます！」`, `「私たちの力を合わせれば、魔王城の扉を開けるはずです！」`]; break;
-      case 7: quotes = [`「魔王の呪いになんて、私は負けません！${activeCharacter.name}さん、光の力を信じて！」`]; break;
+      case 1:
+        quotes = isFemale
+          ? [`「一緒に魔王を倒しましょう、${activeCharacter.name}さん！まずはスライムを片付けちゃいましょう！」`, `「私の回復魔法でしっかりサポートしますね！」`]
+          : [`「一緒に魔王を倒そうぜ、${activeCharacter.name}！まずは目の前のスライムを蹴散らすぞ！」`, `「俺の魔法で背中は守ってやる、思い切り行ってくれ！」`];
+        break;
+      case 2:
+        quotes = isFemale
+          ? [`「ゴブリンたちは集団で襲ってきます。気をつけてください！」`, `「${activeCharacter.name}さんが戦ってくれるなら、私は心強いです！」`]
+          : [`「ゴブリンどもが集団で狙ってやがるな。気を引き締めて行こうぜ！」`, `「${activeCharacter.name}が前線を張ってくれるなら、俺も全力を尽くすさ！」`];
+        break;
+      case 3:
+        quotes = isFemale
+          ? [`「大クモの毒はとても厄介です。少しでも痺れたら言ってください！」`, `「洞窟は暗いですね…私の聖なる光で照らします」`]
+          : [`「大クモの毒は厄介だ。痺れたらすぐに言えよ、即効で治療してやる！」`, `「暗い洞窟だな…だが俺たちの絆の光があれば怖くねえ！」`];
+        break;
+      case 4:
+        quotes = isFemale
+          ? [`「盗賊たちに襲われましたね…でも、命を奪わずに衛兵に渡してくれて安心しました。」`, `「旅路にはいろんな人がいますね。油断しないようにしましょう」`]
+          : [`「盗賊どもを懲らしめたな！命まで奪わずに正義を貫く姿勢、さすがだぜ！」`, `「荒野には油断できない奴らが多いな。しっかり足元を固めて行こう！」`];
+        break;
+      case 5:
+        quotes = isFemale
+          ? [`「オーガの怪力、凄まじい破壊力でした…！${activeCharacter.name}さん、怪我はありませんか？」`, `「天と地の神々に誓って、私は${activeCharacter.name}さんを信じています！」`]
+          : [`「オーガの巨体を叩きのめすとはな…！${activeCharacter.name}、怪我はねえか？」`, `「どんな強敵が相手でも、俺はお前の背中を信じて戦うぜ！」`];
+        break;
+      case 6:
+        quotes = isFemale
+          ? [`「ついに滅びの竜まで倒しましたね！世界が私たちの勝利を待ち望んでいます！」`, `「私たちの力を合わせれば、魔王城の扉を開けるはずです！」`]
+          : [`「あの伝説のドラゴンすら倒したんだ！世界を救うのは俺たちだぜ！」`, `「俺たちの連携なら魔王だって恐るるに足らん！一気に行くぞ！」`];
+        break;
+      case 7:
+        quotes = isFemale
+          ? [`「魔王の呪いになんて、私は負けません！${activeCharacter.name}さん、光の力を信じて！」`]
+          : [`「魔王の圧に屈する俺たちじゃねえ！${activeCharacter.name}、最後の勝利を掴み取るぞ！」`];
+        break;
     }
   } else {
+    // Dark / Demon alignment dialogues
     switch (currentStage) {
-      case 1: quotes = [`「${activeCharacter.name}さん…？なんだか目が少し怖いです…大丈夫ですか？」`, `「魔王を倒すためとはいえ、無理はしないでくださいね」`]; break;
-      case 2: quotes = [`「魔物を無残に切り刻むあなたの剣…少し容赦がなさすぎる気がします…」`, `「そんな冷たい顔で見つめないでください…」`]; break;
-      case 3: quotes = [`「混沌の魔結晶を吸収するなんて！そんなことしたら心まで闇に染まってしまいます！」`, `「…あなたから、魔物のような波動を感じます…嘘ですよね…？」`]; break;
-      case 4: quotes = [`「盗賊を脅してお金を奪い取るなんて…私たちは本当に正義の旅をしているのですか…？」`, `「お金は大切ですが、やり方が間違っています！」`]; break;
-      case 5: quotes = [`「${activeCharacter.name}、お願いです…昔の優しいあなたに戻って…このままでは…」`, `「私はあなたについていくのが、だんだん怖くなってきました…」`]; break;
-      case 6: quotes = [`「あなたは魔王を倒して、自分が新たなる闇の支配者になろうとしているのですか…？」`, `「…もしそうなら、私はあなたの刃になれません」`]; break;
-      case 7: quotes = [`「私は世界を護るため、あなたを討ちます！これ以上闇を広げさせない！」`]; break;
+      case 1:
+        quotes = isFemale
+          ? [`「${activeCharacter.name}さん…？なんだか目が少し怖いです…大丈夫ですか？」`, `「魔王を倒すためとはいえ、無理はしないでくださいね」`]
+          : [`「${activeCharacter.name}…？どうしたんだ、そんな冷たい目をして…何かあったのか？」`, `「魔王を倒すためとはいえ、無茶な戦い方はよしてくれよ」`];
+        break;
+      case 2:
+        quotes = isFemale
+          ? [`「魔物を無残に切り刻むあなたの剣…少し容赦がなさすぎる気がします…」`, `「そんな冷たい顔で見つめないでください…」`]
+          : [`「敵を無残に痛めつけるなんて…おい、いつからそんな容赦のない奴になったんだ？」`, `「そんな冷徹な目で見つめられると、相棒でもゾッとするぜ…」`];
+        break;
+      case 3:
+        quotes = isFemale
+          ? [`「混沌の魔結晶を吸収するなんて！そんなことしたら心まで闇に染まってしまいます！」`, `「…あなたから、魔物のような波動を感じます…嘘ですよね…？」`]
+          : [`「混沌の魔結晶を体に取り込むだと！？正気かよ${activeCharacter.name}、闇に呑み込まれちまうぞ！」`, `「お前から感じるこの禍々しい気配…一体どうなっちまったんだ…！？」`];
+        break;
+      case 4:
+        quotes = isFemale
+          ? [`「盗賊を脅してお金を奪い取るなんて…私たちは本当に正義の旅をしているのですか…？」`, `「お金は大切ですが、やり方が間違っています！」`]
+          : [`「降伏した奴らから金を巻き上げるなんてな…俺たちは強盗の真似事をしに来たんじゃないぞ！」`, `「力で相手を服従させるやり方…俺には到底納得できねえ！」`];
+        break;
+      case 5:
+        quotes = isFemale
+          ? [`「${activeCharacter.name}、お願いです…昔の優しいあなたに戻って…このままでは…」`, `「私はあなたについていくのが、だんだん怖くなってきました…」`]
+          : [`「${activeCharacter.name}、目を覚ましてくれ！昔の熱い志はどうしたんだよ…！」`, `「お前についていくのが、だんだん恐ろしくなってきたぜ…」`];
+        break;
+      case 6:
+        quotes = isFemale
+          ? [`「あなたは魔王を倒して、自分が新たなる闇の支配者になろうとしているのですか…？」`, `「…もしそうなら、私はあなたの刃になれません」`]
+          : [`「お前は魔王を倒して、自分が新たな闇の支配者になろうってのか…！？」`, `「…もしそうなら、俺はお前の野望に手を貸すわけにはいかねえ」`];
+        break;
+      case 7:
+        quotes = isFemale
+          ? [`「私は世界を護るため、あなたを討ちます！これ以上闇を広げさせない！」`]
+          : [`「俺は世界と人々の未来を守るため、相棒のお前を討つ！これ以上闇に堕ちるな！」`];
+        break;
     }
   }
 
-  const selectedQuote = quotes[Math.floor(Math.random() * quotes.length)] || '「共に行きましょう！」';
+  const selectedQuote = quotes[Math.floor(Math.random() * quotes.length)] || (isFemale ? '「共に行きましょう！」' : '「共に行こうぜ！」');
   compSpeechText.textContent = selectedQuote;
 });
 

@@ -188,6 +188,7 @@ export function createCharacter(
   
   const defaultCompanion: CompanionNPC = companion || {
     name: 'セリア',
+    gender: 'female',
     classType: 'cleric',
     stats: { ...CLASS_DEFINITIONS.cleric.baseStats },
     affection: 80
