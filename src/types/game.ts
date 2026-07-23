@@ -81,9 +81,11 @@ export interface Buff {
 }
 
 export interface CompanionNPC {
+  readonly id?: string;
   readonly name: string;
   readonly gender: 'female' | 'male';
   readonly classType: CharacterClassType;
+  level?: number;
   stats: Stats;
   avatarUrl?: string;
   affection: number; // 0 to 100 trust level
@@ -106,7 +108,8 @@ export interface Character {
   avatarUrl?: string; // Base64 image string uploaded by user
   gold: number;
   alignment: number; // Positive = Hero, Negative = Demon Lord path
-  companion: CompanionNPC;
+  companion: CompanionNPC; // Primary companion (for backward compatibility)
+  companions: CompanionNPC[]; // Party of all recruited companions
   daysSinceLastInn: number; // Days elapsed since resting at Inn
 }
 

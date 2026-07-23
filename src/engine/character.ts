@@ -174,8 +174,8 @@ export function rollDiceStats(classType: CharacterClassType): Stats {
 }
 
 /**
- * Initialize a new character sheet at Level 1.
- */
+  * Initialize a new character sheet at Level 1.
+  */
 export function createCharacter(
   name: string,
   classType: CharacterClassType,
@@ -187,12 +187,17 @@ export function createCharacter(
   const finalStats = rolledStats || { ...classDef.baseStats };
   
   const defaultCompanion: CompanionNPC = companion || {
+    id: crypto.randomUUID ? crypto.randomUUID() : Math.random().toString(36).substring(2),
     name: 'セリア',
     gender: 'female',
     classType: 'cleric',
+    level: 1,
     stats: { ...CLASS_DEFINITIONS.cleric.baseStats },
     affection: 80
   };
+  if (!defaultCompanion.level) {
+    defaultCompanion.level = 1;
+  }
   
   return {
     id: crypto.randomUUID ? crypto.randomUUID() : Math.random().toString(36).substring(2),
@@ -214,7 +219,31 @@ export function createCharacter(
     gold: 150, // Start with 150 Gold for weapon Gacha!
     alignment: 0, // Starts neutral
     companion: defaultCompanion,
+    companions: [defaultCompanion],
     daysSinceLastInn: 0
+  };
+}
+
+/**
+ * Helper to construct a new recruited companion NPC
+ */
+export function createCompanionNPC(
+  name: string,
+  gender: 'female' | 'male',
+  classType: CharacterClassType,
+  stats?: Stats,
+  avatarUrl?: string
+): CompanionNPC {
+  const baseStats = stats || rollDiceStats(classType);
+  return {
+    id: crypto.randomUUID ? crypto.randomUUID() : Math.random().toString(36).substring(2),
+    name,
+    gender,
+    classType,
+    level: 1,
+    stats: { ...baseStats },
+    avatarUrl,
+    affection: 80
   };
 }
 

@@ -2215,3 +2215,171 @@ body {
   color: var(--success-color);
   border-color: var(--success-color);
 }
+
+/* =========================================
+   Inventory Coin Exchange (Sell) & Batch Sell
+   ========================================= */
+.inventory-header-flex {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+}
+
+.btn-sell-batch {
+  font-size: 0.78rem;
+  padding: 6px 12px;
+  background: rgba(255, 215, 0, 0.12);
+  border: 1px solid rgba(255, 215, 0, 0.3);
+  color: var(--accent-color);
+  border-radius: 8px;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: all 0.2s ease;
+}
+
+.btn-sell-batch:hover {
+  background: rgba(255, 215, 0, 0.25);
+  box-shadow: 0 0 12px var(--accent-glow);
+  transform: translateY(-1px);
+}
+
+.inv-item-actions {
+  display: flex;
+  gap: 6px;
+  margin-top: 8px;
+  width: 100%;
+}
+
+.btn-sell-item {
+  flex: 1;
+  font-size: 0.75rem;
+  padding: 4px 8px;
+  background: rgba(255, 215, 0, 0.1);
+  border: 1px solid rgba(255, 215, 0, 0.25);
+  color: #ffe066;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.btn-sell-item:hover {
+  background: rgba(255, 215, 0, 0.22);
+  color: #fff;
+}
+
+/* =========================================
+   Companion Party Tabs & Selector
+   ========================================= */
+.companion-header-bar {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.companion-party-tabs {
+  display: flex;
+  gap: 6px;
+  flex-wrap: wrap;
+  margin-top: 4px;
+}
+
+.comp-tab {
+  padding: 4px 10px;
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid var(--glass-border);
+  border-radius: 14px;
+  font-size: 0.78rem;
+  color: var(--text-secondary);
+  cursor: pointer;
+  transition: all 0.2s ease;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.comp-tab:hover {
+  background: rgba(124, 77, 255, 0.15);
+  border-color: rgba(124, 77, 255, 0.3);
+  color: #fff;
+}
+
+.comp-tab.active {
+  background: linear-gradient(135deg, rgba(124, 77, 255, 0.3), rgba(0, 229, 255, 0.2));
+  border-color: var(--secondary-color);
+  color: #fff;
+  font-weight: 600;
+  box-shadow: 0 0 10px rgba(0, 229, 255, 0.2);
+}
+
+/* =========================================
+   Tavern & NPC Recruitment Card
+   ========================================= */
+#tavern-card {
+  margin-top: 1rem;
+}
+
+.btn-hire {
+  width: 100%;
+  padding: 12px;
+  margin-top: 10px;
+  font-size: 0.95rem;
+  font-weight: 600;
+  background: linear-gradient(135deg, #7c4dff 0%, #00e5ff 100%);
+  border: none;
+  box-shadow: 0 4px 15px rgba(124, 77, 255, 0.3);
+  transition: all 0.2s ease;
+}
+
+.btn-hire:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(0, 229, 255, 0.4);
+}
+
+/* =========================================
+   Battle Companions Section
+   ========================================= */
+.battle-companions-section {
+  margin-top: 10px;
+  padding-top: 8px;
+  border-top: 1px dashed rgba(255, 255, 255, 0.1);
+  width: 100%;
+}
+
+.battle-companions-title {
+  font-size: 0.72rem;
+  color: var(--text-secondary);
+  display: block;
+  margin-bottom: 4px;
+}
+
+.battle-companions-container {
+  display: flex;
+  gap: 6px;
+  flex-wrap: wrap;
+}
+
+.battle-comp-chip {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  padding: 3px 8px;
+  background: rgba(0, 229, 255, 0.08);
+  border: 1px solid rgba(0, 229, 255, 0.2);
+  border-radius: 12px;
+  font-size: 0.75rem;
+  color: var(--text-primary);
+}
+
+.battle-comp-chip .comp-icon {
+  font-size: 0.85rem;
+}
+
+.battle-comp-chip .comp-name {
+  font-weight: 600;
+}
+
+.battle-comp-chip .comp-cls {
+  font-size: 0.68rem;
+  opacity: 0.75;
+}

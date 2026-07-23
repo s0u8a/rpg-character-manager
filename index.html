@@ -333,6 +333,12 @@
 
         <!-- Companion NPC Card & Speech Bubble HUD -->
         <div id="companion-card" class="card glass hidden">
+          <div class="card-header companion-header-bar">
+            <h2>👥 パーティ同行者</h2>
+            <div id="companion-party-tabs" class="companion-party-tabs">
+              <!-- Dynamically populated party selector tabs -->
+            </div>
+          </div>
           <div class="character-card-header companion-card-header">
             <div class="char-avatar-container companion-avatar-container" id="comp-avatar-wrapper">
               <span id="comp-avatar" class="comp-avatar">🛡️</span>
@@ -398,11 +404,88 @@
           </div>
         </div>
 
+        <!-- Tavern / NPC Recruitment Card -->
+        <div id="tavern-card" class="card glass hidden">
+          <div class="card-header">
+            <h2>🍻 冒険者酒場 (NPC雇用)</h2>
+            <p>100 G を支払い、新たな仲間NPCをパーティにスカウト・雇用できます！</p>
+          </div>
+          <div class="card-body">
+            <form id="hire-npc-form" onsubmit="event.preventDefault();">
+              <div class="form-group">
+                <label for="tavern-npc-name">NPCの名前</label>
+                <input type="text" id="tavern-npc-name" placeholder="例: レオン" value="レオン">
+              </div>
+
+              <div class="form-group">
+                <label>性別</label>
+                <div class="gender-selector">
+                  <label class="gender-option-card">
+                    <input type="radio" name="tavern-npc-gender" value="male" checked>
+                    <div class="gender-option-content">
+                      <span class="gender-icon">♂</span>
+                      <span class="gender-name">男性</span>
+                    </div>
+                  </label>
+                  <label class="gender-option-card">
+                    <input type="radio" name="tavern-npc-gender" value="female">
+                    <div class="gender-option-content">
+                      <span class="gender-icon">♀</span>
+                      <span class="gender-name">女性</span>
+                    </div>
+                  </label>
+                </div>
+              </div>
+
+              <div class="form-group">
+                <label>職業</label>
+                <div class="class-selector">
+                  <label class="class-option-card">
+                    <input type="radio" name="tavern-npc-class" value="warrior" checked>
+                    <div class="class-option-content">
+                      <span class="class-icon">⚔️</span>
+                      <span class="class-name">戦士</span>
+                    </div>
+                  </label>
+                  <label class="class-option-card">
+                    <input type="radio" name="tavern-npc-class" value="mage">
+                    <div class="class-option-content">
+                      <span class="class-icon">🔮</span>
+                      <span class="class-name">魔法使い</span>
+                    </div>
+                  </label>
+                  <label class="class-option-card">
+                    <input type="radio" name="tavern-npc-class" value="rogue">
+                    <div class="class-option-content">
+                      <span class="class-icon">🗡️</span>
+                      <span class="class-name">盗賊</span>
+                    </div>
+                  </label>
+                  <label class="class-option-card">
+                    <input type="radio" name="tavern-npc-class" value="cleric">
+                    <div class="class-option-content">
+                      <span class="class-icon">🛡️</span>
+                      <span class="class-name">僧侶</span>
+                    </div>
+                  </label>
+                </div>
+              </div>
+
+              <div class="form-group">
+                <button type="button" id="btn-roll-tavern-stats" class="btn btn-secondary">🎲 能力値をダイスで決める</button>
+                <div class="rolled-stats-preview hidden" id="tavern-stats-preview"></div>
+              </div>
+
+              <button type="button" id="btn-hire-npc" class="btn btn-primary btn-hire">🍻 仲間NPCをスカウト・雇用する (100 G)</button>
+            </form>
+          </div>
+        </div>
+
       </section>
 
       <!-- Right Panel: Inventory, Equipment & Buffs -->
       <section class="right-panel">
-        
+
         <!-- Equipment Slots -->
         <div id="equipment-card" class="card glass hidden">
           <div class="card-header">
@@ -507,9 +590,14 @@
 
         <!-- Inventory Grid -->
         <div id="inventory-card" class="card glass hidden">
-          <div class="card-header">
-            <h2>インベントリ</h2>
-            <p>ガチャ等で獲得した所持装備一覧です。選択して着脱できます。</p>
+          <div class="card-header inventory-header-flex">
+            <div>
+              <h2>インベントリ</h2>
+              <p>獲得した装備一覧。装着やコイン交換（売却）が可能です。</p>
+            </div>
+            <button id="btn-sell-all-common-rare" class="btn btn-secondary btn-sell-batch" title="未装備のノーマル・レアアイテムを一括売却します">
+              💰 ノーマル/レア一括売却
+            </button>
           </div>
           <div class="card-body">
             <div class="inventory-grid" id="inventory-container">
@@ -615,6 +703,14 @@
               <div class="bar-outer mp-bar">
                 <div id="battle-player-mp-fill" class="bar-inner mp-fill" style="width: 100%;"></div>
               </div>
+            </div>
+          </div>
+
+          <!-- Party Companions Battle List -->
+          <div class="battle-companions-section">
+            <span class="battle-companions-title">👥 同行パーティ:</span>
+            <div id="battle-companions-container" class="battle-companions-container">
+              <!-- Dynamically populated companion units -->
             </div>
           </div>
         </div>

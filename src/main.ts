@@ -1,5 +1,5 @@
 import { Character, EquipmentSlot, EquipableItem, StatType, Enemy, CompanionNPC, Stats, CharacterClassType, BuffType } from './types/game';
-import { createCharacter, calculateEffectiveStats, getBaseStatsAtLevel, equipItem, unequipItem, gainExp, CLASS_DEFINITIONS, rollDiceStats } from './engine/character';
+import { createCharacter, calculateEffectiveStats, getBaseStatsAtLevel, equipItem, unequipItem, gainExp, CLASS_DEFINITIONS, rollDiceStats, createCompanionNPC } from './engine/character';
 import { pullGacha } from './engine/gacha';
 
 // App state
@@ -7,6 +7,21 @@ let activeCharacter: Character | null = null;
 let activeEnemy: Enemy | null = null;
 let currentStage: 1 | 2 | 3 | 4 | 5 | 6 | 7 = 1;
 let isPlayerDefending = false;
+
+// Multi-companion state
+let selectedCompanionIndex = 0;
+let rolledTavernStats: Stats | null = null;
+
+// Helper to compute equipment sell coin price
+function getItemSellPrice(item: EquipableItem): number {
+  switch (item.rarity) {
+    case 'common': return 15;
+    case 'rare': return 40;
+    case 'epic': return 100;
+    case 'legendary': return 300;
+    default: return 15;
+  }
+}
 
 // Selected avatars
 let selectedAvatarUrl: string | null = null;
@@ -219,6 +234,16 @@ const slotAccessory = document.getElementById('slot-accessory')!;
 
 // Inventory
 const inventoryContainer = document.getElementById('inventory-container')!;
+const btnSellAllCommonRare = document.getElementById('btn-sell-all-common-rare')!;
+
+// Tavern & Multi-Companion DOM elements
+const tavernCard = document.getElementById('tavern-card')!;
+const tavernNpcNameInput = document.getElementById('tavern-npc-name') as HTMLInputElement;
+const btnRollTavernStats = document.getElementById('btn-roll-tavern-stats')!;
+const tavernStatsPreview = document.getElementById('tavern-stats-preview')!;
+const btnHireNpc = document.getElementById('btn-hire-npc')!;
+const companionPartyTabs = document.getElementById('companion-party-tabs')!;
+const battleCompanionsContainer = document.getElementById('battle-companions-container')!;
 
 // Interaction buttons
 const btnResetChar = document.getElementById('btn-reset-character')!;
@@ -524,6 +549,39 @@ function buildInventoryCard(item: EquipableItem): HTMLElement {
   card.appendChild(infoDiv);
   card.appendChild(req);
 
+  // --- 装備の売却（コイン交換）ボタン ---
+  const actionsDiv = document.createElement('div');
+  actionsDiv.className = 'inv-item-actions';
+
+  const sellPrice = getItemSellPrice(item);
+  const sellBtn = document.createElement('button');
+  sellBtn.className = 'btn-sell-item';
+  sellBtn.textContent = `💰 ${sellPrice} G で交換`;
+  sellBtn.onclick = (e) => {
+    e.stopPropagation(); // Prevents equipping on sell click
+    if (!activeCharacter) return;
+
+    // Unequip item if currently equipped
+    const nowEquipped = activeCharacter.equipment[item.slot]?.id === item.id;
+    if (nowEquipped) {
+      unequipItem(activeCharacter, item.slot);
+    }
+
+    // Remove item from inventory
+    const idx = playerInventory.findIndex(inv => inv.id === item.id);
+    if (idx !== -1) {
+      playerInventory.splice(idx, 1);
+    }
+
+    activeCharacter.gold += sellPrice;
+    addLog(`💰 [装備売却] 「${item.name}」を ${sellPrice} G に交換しました！`, 'system');
+    spawnDamagePop(inventoryCard, `+${sellPrice} G`, 'heal');
+    updateUI();
+  };
+
+  actionsDiv.appendChild(sellBtn);
+  card.appendChild(actionsDiv);
+
   card.onclick = () => {
     // Re-check equipped state at click time
     const nowEquipped = activeCharacter!.equipment[item.slot]?.id === item.id;
@@ -750,8 +808,18 @@ function updateUI(): void {
     battleEnemyReward.textContent = `+${activeEnemy.rewardExp} EXP`;
   }
 
-  // 6. Companion details HUD
-  const comp = activeCharacter.companion;
+  // 6. Companion details & Multi-Party HUD
+  if (!activeCharacter.companions || activeCharacter.companions.length === 0) {
+    activeCharacter.companions = [activeCharacter.companion];
+  }
+
+  if (selectedCompanionIndex >= activeCharacter.companions.length) {
+    selectedCompanionIndex = 0;
+  }
+
+  const comp = activeCharacter.companions[selectedCompanionIndex] || activeCharacter.companions[0]!;
+  activeCharacter.companion = comp; // sync active primary companion
+
   displayCompName.textContent = comp.name;
   displayCompClass.textContent = CLASS_DEFINITIONS[comp.classType]!.name;
   if (comp.avatarUrl) {
@@ -759,14 +827,53 @@ function updateUI(): void {
   } else {
     compAvatarWrapper.innerHTML = `<span class="comp-avatar">${CLASS_DEFINITIONS[comp.classType]!.icon}</span>`;
   }
-  compStatHp.textContent = comp.stats.hp.toString();
-  compStatMp.textContent = comp.stats.mp.toString();
-  compStatAtk.textContent = comp.stats.atk.toString();
-  compStatDef.textContent = comp.stats.def.toString();
-  compStatSpd.textContent = comp.stats.spd.toString();
+
+  // Scale displayed companion stats to player level
+  const compLvlDiff = activeCharacter.level - 1;
+  const compGrowth = CLASS_DEFINITIONS[comp.classType]!.growthStats;
+  const calcCompHp = Math.round(comp.stats.hp + compLvlDiff * compGrowth.hp);
+  const calcCompMp = Math.round(comp.stats.mp + compLvlDiff * compGrowth.mp);
+  const calcCompAtk = Math.round(comp.stats.atk + compLvlDiff * compGrowth.atk);
+  const calcCompDef = Math.round(comp.stats.def + compLvlDiff * compGrowth.def);
+  const calcCompSpd = Math.round(comp.stats.spd + compLvlDiff * compGrowth.spd);
+
+  compStatHp.textContent = calcCompHp.toString();
+  compStatMp.textContent = calcCompMp.toString();
+  compStatAtk.textContent = calcCompAtk.toString();
+  compStatDef.textContent = calcCompDef.toString();
+  compStatSpd.textContent = calcCompSpd.toString();
 
   if (displayCompGender) {
     displayCompGender.textContent = comp.gender === 'female' ? '女性 ♀' : '男性 ♂';
+  }
+
+  // Render Party Tabs Selector
+  if (companionPartyTabs) {
+    companionPartyTabs.innerHTML = '';
+    activeCharacter.companions.forEach((cItem, idx) => {
+      const tab = document.createElement('div');
+      tab.className = `comp-tab ${idx === selectedCompanionIndex ? 'active' : ''}`;
+      const cDef = CLASS_DEFINITIONS[cItem.classType]!;
+      tab.innerHTML = `<span>${cDef.icon}</span> <span>${cItem.name}</span>`;
+      tab.onclick = () => {
+        selectedCompanionIndex = idx;
+        activeCharacter!.companion = activeCharacter!.companions[idx]!;
+        updateUI();
+      };
+      companionPartyTabs.appendChild(tab);
+    });
+  }
+
+  // Render Battle Companions List
+  if (battleCompanionsContainer) {
+    battleCompanionsContainer.innerHTML = '';
+    activeCharacter.companions.forEach(cItem => {
+      const chip = document.createElement('div');
+      chip.className = 'battle-comp-chip';
+      const cDef = CLASS_DEFINITIONS[cItem.classType]!;
+      chip.innerHTML = `<span class="comp-icon">${cDef.icon}</span><span class="comp-name">${cItem.name}</span><span class="comp-cls">(${cDef.name})</span>`;
+      battleCompanionsContainer.appendChild(chip);
+    });
   }
 
   // 7. Companion affection and inn status
@@ -870,32 +977,84 @@ function spawnStageEnemy(stage: 1 | 2 | 3 | 4 | 5 | 6 | 7): void {
 }
 
 /**
- * Alignment-based choices screen between combat stages
+ * Executes active battle turns & skills for all party companion NPCs!
  */
-function triggerCompanionSupport(): void {
-  if (!activeCharacter || !activeEnemy) return;
+function executePartyCompanionTurns(): void {
+  if (!activeCharacter || !activeEnemy || activeEnemy.hp <= 0) return;
 
-  const supportChance = 0.2 + (activeCharacter.companion.affection / 100) * 0.6;
-  if (Math.random() > supportChance) return;
-
-  const playerStats = calculateEffectiveStats(activeCharacter);
-  const companion = activeCharacter.companion;
-  const healThreshold = playerStats.hp * 0.45;
+  const char = activeCharacter;
+  const playerStats = calculateEffectiveStats(char);
   const compCard = document.getElementById('companion-card');
+  const level = char.level;
 
-  if (activeCharacter.currentHp <= healThreshold) {
-    const healAmt = Math.max(8, Math.round(companion.stats.matk * 0.8 + activeCharacter.level * 2));
-    activeCharacter.currentHp = Math.min(playerStats.hp, activeCharacter.currentHp + healAmt);
-    spawnDamagePop(battlePlayerCard, `+${healAmt}`, 'heal');
-    addLog(`💗 [仲間支援] ${companion.name} がヒールで ${healAmt} 回復しました！`, 'combat-spell');
-  } else {
-    const supportDamage = Math.max(5, Math.round(companion.stats.atk * 0.7 + activeCharacter.level * 1.5));
-    activeEnemy.hp = Math.max(0, activeEnemy.hp - supportDamage);
-    spawnDamagePop(battleEnemyCard, `${supportDamage}`, 'dealt');
-    addLog(`✨ [仲間支援] ${companion.name} が援護攻撃を放ち、${activeEnemy.name} に ${supportDamage} ダメージ！`, 'combat-atk');
+  if (!char.companions || char.companions.length === 0) {
+    char.companions = [char.companion];
   }
 
-  // Flash companion card cyan (support)
+  char.companions.forEach(comp => {
+    if (!activeEnemy || activeEnemy.hp <= 0) return;
+
+    // Scale companion base stats with player level
+    const growth = CLASS_DEFINITIONS[comp.classType]!.growthStats;
+    const base = comp.stats;
+    const lvlDiff = level - 1;
+
+    const scaledAtk = Math.round(base.atk + lvlDiff * growth.atk);
+    const scaledMatk = Math.round(base.matk + lvlDiff * growth.matk);
+    const scaledSpd = Math.round(base.spd + lvlDiff * growth.spd);
+
+    switch (comp.classType) {
+      case 'warrior': {
+        // 重撃スマッシュ
+        const factor = 1.35 + Math.random() * 0.35;
+        let damage = Math.max(12, Math.round(scaledAtk * factor + level * 3.5 - activeEnemy.def * 0.4));
+        const isCrit = Math.random() < 0.22;
+        if (isCrit) damage = Math.round(damage * 1.5);
+
+        activeEnemy.hp = Math.max(0, activeEnemy.hp - damage);
+        spawnDamagePop(battleEnemyCard, `${comp.name}: ${damage}${isCrit ? '!! CRIT' : ''}`, 'dealt');
+        addLog(`⚔️ [NPC攻撃] 【${comp.name}】の『重撃スマッシュ』！ ${activeEnemy.name} に **${damage}** の大ダメージ！`, 'combat-atk');
+        break;
+      }
+      case 'mage': {
+        // 爆炎ヴォルカノン
+        const factor = 1.55 + Math.random() * 0.45;
+        const damage = Math.max(15, Math.round(scaledMatk * factor + level * 4 - activeEnemy.def * 0.3));
+
+        activeEnemy.hp = Math.max(0, activeEnemy.hp - damage);
+        spawnDamagePop(battleEnemyCard, `${comp.name}: ${damage} (FIRE)`, 'dealt');
+        addLog(`🔮 [NPC攻撃] 【${comp.name}】の『爆炎ヴォルカノン』！ ${activeEnemy.name} に **${damage}** の爆炎魔法ダメージ！`, 'combat-spell');
+        break;
+      }
+      case 'rogue': {
+        // 影縫い連撃
+        const factor = 1.25 + Math.random() * 0.35;
+        let damage = Math.max(10, Math.round((scaledAtk + scaledSpd * 0.5) * factor + level * 3));
+        const isCrit = Math.random() < 0.35;
+        if (isCrit) damage = Math.round(damage * 1.6);
+
+        activeEnemy.hp = Math.max(0, activeEnemy.hp - damage);
+        spawnDamagePop(battleEnemyCard, `${comp.name}: ${damage}${isCrit ? '!! CRIT' : ''}`, 'dealt');
+        addLog(`🗡️ [NPC攻撃] 【${comp.name}】の『影縫い連撃』！ ${activeEnemy.name} の急所に **${damage}** ダメージ！`, 'combat-atk');
+        break;
+      }
+      case 'cleric': {
+        if (char.currentHp < playerStats.hp * 0.65) {
+          const healAmt = Math.max(15, Math.round(scaledMatk * 1.3 + level * 3.5));
+          char.currentHp = Math.min(playerStats.hp, char.currentHp + healAmt);
+          spawnDamagePop(battlePlayerCard, `${comp.name}: +${healAmt}`, 'heal');
+          addLog(`💗 [NPC支援] 【${comp.name}】の『神聖回復ヒール』！ ${char.name} のHPが **${healAmt}** 回復！`, 'combat-spell');
+        } else {
+          const damage = Math.max(12, Math.round(scaledMatk * 1.5 + level * 3.5 - activeEnemy.def * 0.3));
+          activeEnemy.hp = Math.max(0, activeEnemy.hp - damage);
+          spawnDamagePop(battleEnemyCard, `${comp.name}: ${damage} (HOLY)`, 'dealt');
+          addLog(`✨ [NPC攻撃] 【${comp.name}】の『聖光耀弾ホーリーボルト』！ ${activeEnemy.name} に **${damage}** の聖なる魔法ダメージ！`, 'combat-spell');
+        }
+        break;
+      }
+    }
+  });
+
   if (compCard) {
     compCard.classList.add('comp-support-flash');
     setTimeout(() => compCard.classList.remove('comp-support-flash'), 500);
@@ -945,6 +1104,7 @@ function showGameOver(message: string): void {
   appHeader.classList.add('hidden');
   characterCard.classList.add('hidden');
   companionCard.classList.add('hidden');
+  tavernCard.classList.add('hidden');
   equipmentCard.classList.add('hidden');
   gachaCard.classList.add('hidden');
   inventoryCard.classList.add('hidden');
@@ -964,6 +1124,7 @@ function triggerStageChoiceScreen(stageCompleted: 1 | 2 | 3 | 4 | 5 | 6): void {
   appHeader.classList.add('hidden');
   characterCard.classList.add('hidden');
   companionCard.classList.add('hidden');
+  tavernCard.classList.add('hidden');
   equipmentCard.classList.add('hidden');
   gachaCard.classList.add('hidden');
   inventoryCard.classList.add('hidden');
@@ -1022,6 +1183,7 @@ function applyChoiceResult(choice: StoryChoice, stageCompleted: 1 | 2 | 3 | 4 | 
     appHeader.classList.remove('hidden');
     characterCard.classList.remove('hidden');
     companionCard.classList.remove('hidden');
+    tavernCard.classList.remove('hidden');
     equipmentCard.classList.remove('hidden');
     gachaCard.classList.remove('hidden');
     inventoryCard.classList.remove('hidden');
@@ -1255,6 +1417,7 @@ function startAdventureFromPrologue(): void {
   appHeader.classList.remove('hidden');
   characterCard.classList.remove('hidden');
   companionCard.classList.remove('hidden');
+  tavernCard.classList.remove('hidden');
   equipmentCard.classList.remove('hidden');
   gachaCard.classList.remove('hidden');
   inventoryCard.classList.remove('hidden');
@@ -1536,7 +1699,7 @@ btnSimAttack.addEventListener('click', () => {
   if (activeEnemy.hp <= 0) {
     handleEnemyDefeated();
   } else {
-    triggerCompanionSupport();
+    executePartyCompanionTurns();
     triggerEnemyTurn();
   }
 });
@@ -1572,7 +1735,7 @@ btnSimCast.addEventListener('click', () => {
   if (activeEnemy.hp <= 0) {
     handleEnemyDefeated();
   } else {
-    triggerCompanionSupport();
+    executePartyCompanionTurns();
     triggerEnemyTurn();
   }
 });
@@ -1598,7 +1761,7 @@ btnSimHeal.addEventListener('click', () => {
   addLog(`💚 [回復呪文] ${activeCharacter.name} のヒール！ (MP -${mpCost}) HPが **${actualHeal}** 回復しました！`, 'combat-spell');
 
   updateUI();
-  triggerCompanionSupport();
+  executePartyCompanionTurns();
   triggerEnemyTurn();
 });
 
@@ -1609,8 +1772,103 @@ btnSimDefend.addEventListener('click', () => {
   spawnDamagePop(battlePlayerCard, 'DEFENDING', 'msg');
   addLog(`🛡️ [ぼうぎょ] ${activeCharacter.name} は防御の構えをとった！ 次の被ダメージを60%軽減します。`, 'system');
 
-  triggerCompanionSupport();
+  executePartyCompanionTurns();
   triggerEnemyTurn();
+});
+
+/**
+ * Tavern Dice Roll & Hire NPC Handlers
+ */
+btnRollTavernStats?.addEventListener('click', () => {
+  const classRadio = document.querySelector('input[name="tavern-npc-class"]:checked') as HTMLInputElement;
+  const classVal = (classRadio ? classRadio.value : 'warrior') as CharacterClassType;
+  rolledTavernStats = rollDiceStats(classVal);
+
+  animateStatRoll(tavernStatsPreview, rolledTavernStats, () => {
+    addLog(`酒場にて新NPCの能力値ダイスロールが完了しました！`, 'system');
+  });
+});
+
+btnHireNpc?.addEventListener('click', () => {
+  if (!activeCharacter) return;
+
+  const cost = 100;
+  if (activeCharacter.gold < cost) {
+    addLog(`❌ [スカウト失敗] ゴールドが足りません！ (所持: ${activeCharacter.gold} G / 必要: ${cost} G)`, 'error');
+    spawnDamagePop(tavernCard, 'NO GOLD', 'msg');
+    return;
+  }
+
+  const name = tavernNpcNameInput.value.trim() || 'レオン';
+  const genderRadio = document.querySelector('input[name="tavern-npc-gender"]:checked') as HTMLInputElement;
+  const genderVal = (genderRadio ? genderRadio.value : 'male') as 'female' | 'male';
+  const classRadio = document.querySelector('input[name="tavern-npc-class"]:checked') as HTMLInputElement;
+  const classVal = (classRadio ? classRadio.value : 'warrior') as CharacterClassType;
+
+  if (!rolledTavernStats) {
+    rolledTavernStats = rollDiceStats(classVal);
+  }
+
+  const newNpc = createCompanionNPC(name, genderVal, classVal, rolledTavernStats);
+  newNpc.level = activeCharacter.level;
+
+  if (!activeCharacter.companions) {
+    activeCharacter.companions = [activeCharacter.companion];
+  }
+
+  activeCharacter.companions.push(newNpc);
+  activeCharacter.gold -= cost;
+
+  // Set as current companion tab selection
+  selectedCompanionIndex = activeCharacter.companions.length - 1;
+  activeCharacter.companion = newNpc;
+
+  rolledTavernStats = null;
+  tavernStatsPreview.classList.add('hidden');
+
+  const classJp = CLASS_DEFINITIONS[classVal]!.name;
+  addLog(`🍻 [NPCスカウト] 新たな仲間 [${newNpc.name} (${classJp})] を 100 G で雇用しました！ パーティに加入しました。`, 'levelup');
+  spawnDamagePop(tavernCard, 'HIRED!', 'heal');
+  updateUI();
+});
+
+/**
+ * Batch Sell Unequipped Common/Rare Equipment Handler
+ */
+btnSellAllCommonRare?.addEventListener('click', () => {
+  if (!activeCharacter || playerInventory.length === 0) {
+    addLog('ℹ️ インベントリにアイテムがありません。', 'system');
+    return;
+  }
+
+  const equippedIds = new Set(
+    Object.values(activeCharacter.equipment)
+      .filter((i): i is EquipableItem => i !== null)
+      .map(i => i.id)
+  );
+
+  const itemsToSell = playerInventory.filter(
+    item => !equippedIds.has(item.id) && (item.rarity === 'common' || item.rarity === 'rare')
+  );
+
+  if (itemsToSell.length === 0) {
+    addLog('ℹ️ 一括売却対象（未装備のノーマル・レア）アイテムがありません。', 'system');
+    return;
+  }
+
+  let totalGold = 0;
+  itemsToSell.forEach(item => {
+    totalGold += getItemSellPrice(item);
+    const idx = playerInventory.findIndex(inv => inv.id === item.id);
+    if (idx !== -1) {
+      playerInventory.splice(idx, 1);
+    }
+  });
+
+  activeCharacter.gold += totalGold;
+  addLog(`💰 [一括売却] ${itemsToSell.length}個の未装備ノーマル/レアアイテムを売却し、合計 **${totalGold} G** を獲得しました！`, 'levelup');
+  spawnDamagePop(inventoryCard, `+${totalGold} G`, 'heal');
+  updateUI();
 });
 
 /**
@@ -1674,6 +1932,7 @@ function triggerEndingScreen(): void {
   appHeader.classList.add('hidden');
   characterCard.classList.add('hidden');
   companionCard.classList.add('hidden');
+  tavernCard.classList.add('hidden');
   equipmentCard.classList.add('hidden');
   gachaCard.classList.add('hidden');
   inventoryCard.classList.add('hidden');
@@ -1793,6 +2052,8 @@ function resetGame(): void {
   selectedCompanionAvatarUrl = null;
   rolledPlayerStats = null;
   rolledCompanionStats = null;
+  rolledTavernStats = null;
+  selectedCompanionIndex = 0;
   playerInventory = []; // clear gacha inventory on reset
   isPlayerDefending = false;
   currentStage = 1;
@@ -1813,6 +2074,8 @@ function resetGame(): void {
   playerStatsPreview.innerHTML = '';
   compStatsPreview.classList.add('hidden');
   compStatsPreview.innerHTML = '';
+  tavernStatsPreview.classList.add('hidden');
+  tavernStatsPreview.innerHTML = '';
   
   buffMightCheck.checked = false;
   buffHasteCheck.checked = false;
@@ -1821,6 +2084,7 @@ function resetGame(): void {
   
   characterCard.classList.add('hidden');
   companionCard.classList.add('hidden');
+  tavernCard.classList.add('hidden');
   equipmentCard.classList.add('hidden');
   gachaCard.classList.add('hidden');
   inventoryCard.classList.add('hidden');
